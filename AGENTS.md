@@ -51,6 +51,9 @@ Test without touching a real AC by pointing the app at a mock server:
 - Screenshots and videos live on the orphan `assets` branch, not on `main`. Reference them with
   `https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/<file>`.
 - Release by pushing a tag: `git tag v1.2.3 && git push origin v1.2.3`.
-  Every release must include a fixed-name `Aeris.zip` (build-app.sh makes it): `install.sh` and the
-  Homebrew cask in `kashmithnisakya/homebrew-tap` (`Casks/aeris.rb`, `version :latest`) download it.
+  Every release must include `Aeris-<version>.zip` and a fixed-name `Aeris.zip` (build-app.sh makes
+  both). `install.sh` downloads `Aeris.zip`; the Homebrew cask in `kashmithnisakya/homebrew-tap`
+  (`Casks/aeris.rb`) pins `Aeris-<version>.zip` with a sha256, and that tap's hourly `bump-aeris`
+  workflow updates the version and checksum after each release (run it by hand to update sooner:
+  `gh workflow run bump-aeris.yml -R kashmithnisakya/homebrew-tap`).
 - Don't add AI co-author trailers to commits or PRs.
