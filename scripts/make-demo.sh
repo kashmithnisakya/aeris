@@ -10,6 +10,7 @@ swift build
 # your real sign-in and always shows the same screens.
 env -u AERIS_CLIENT_ID -u AERIS_CLIENT_SECRET -u AERIS_TOKEN \
   AERIS_KEYCHAIN_SERVICE=com.kashmithnisakya.aeris.demo AERIS_ST_CLI=/usr/bin/true \
+  AERIS_ST_CREDENTIALS=/dev/null AERIS_API=http://127.0.0.1:9 \
   AC_DEMO_OUT="$OUT" "$(swift build --show-bin-path)/Aeris"
 if command -v ffmpeg >/dev/null; then
   (cd "$OUT" && ffmpeg -loglevel error -y -f concat -safe 0 -i frames.txt \
