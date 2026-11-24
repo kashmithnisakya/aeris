@@ -8,7 +8,7 @@
 <meta property="og:title" content="Aeris — your air conditioner, in the menu bar">
 <meta property="og:description" content="Control a Samsung SmartThings air conditioner from the macOS menu bar.">
 <meta property="og:image" content="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/panel-dark.png?v=1.4.1">
-<link rel="icon" href="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/icon.png?v=1.4.1">
+<link rel="icon" href="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/icon.png?v=1.4.3">
 <style>
   :root {
     --bg: #f6f8fb; --surface: #ffffff; --text: #141a22; --muted: #5d6877; --line: #e2e7ee;
@@ -64,7 +64,9 @@
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
   .card h3 { margin: 0 0 4px; font-size: 17px; }
   .card p { margin: 0; color: var(--muted); font-size: 15px; }
-  .card .ico { font-size: 22px; }
+  .card .ico { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
+               background: var(--accent-soft); color: var(--accent); margin-bottom: 10px; }
+  .card .ico svg { width: 20px; height: 20px; stroke-width: 1.9; }
 
   ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
   ol.steps li { counter-increment: s; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
@@ -74,7 +76,7 @@
                         display: grid; place-items: center; }
   ol.steps li .cmd { margin-top: 10px; }
   .shots { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-  .shots img { width: 100%; max-width: 300px; border-radius: 12px; border: 1px solid var(--line); }
+  .shots img { width: 100%; max-width: 340px; height: auto; }
   .spot { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; padding: 28px 0; }
   .spot + .spot { border-top: 1px solid var(--line); }
   .spot.flip .spot-media { order: -1; }
@@ -84,8 +86,7 @@
   .spot ul li { margin: 4px 0; }
   .spot ul b { color: var(--text); font-weight: 600; }
   .spot-media { text-align: center; }
-  .spot-media img { width: 100%; max-width: 330px; border-radius: 14px; border: 1px solid var(--line);
-                    box-shadow: 0 14px 40px rgba(0,0,0,.18); }
+  .spot-media img { width: 100%; max-width: 380px; height: auto; }
   .pill { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
           color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 3px 10px; margin-bottom: 10px; }
   details { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-bottom: 10px; }
@@ -108,7 +109,7 @@
 <body>
 <div class="wrap">
   <nav>
-    <a class="brand" href="#"><img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/icon.png?v=1.4.1" alt="">Aeris</a>
+    <a class="brand" href="#"><img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/icon.png?v=1.4.3" alt="">Aeris</a>
     <div class="links">
       <a href="#setup">Set up</a>
       <a class="opt" href="#features">Features</a>
@@ -119,7 +120,7 @@
   </nav>
 
   <header>
-    <img class="icon" src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/icon.png?v=1.4.1" alt="Aeris app icon">
+    <img class="icon" src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/icon.png?v=1.4.3" alt="Aeris app icon">
     <h1>Aeris</h1>
     <p class="tagline">Your air conditioner, in the menu bar. Control a Samsung SmartThings AC from your Mac in one click.</p>
 
@@ -145,21 +146,21 @@
   </header>
 
   <div class="demo">
-    <img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/demo.gif?v=1.4.1" alt="Aeris demo: sign in, turn the AC on, change temperature, mode and fan from the menu bar" loading="lazy">
+    <img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/demo.gif?v=1.4.3" alt="Aeris demo: sign in, turn the AC on, change temperature, mode and fan from the menu bar" loading="lazy">
   </div>
 
   <section>
     <h2>Everything you reach for, one click away</h2>
     <div class="features">
-      <div class="card"><div class="ico">⏻</div><h3>Instant on/off</h3><p>One click from the menu bar. The icon shows the target temperature while the AC runs.</p></div>
-      <div class="card"><div class="ico">🌡️</div><h3>Temperature</h3><p>Nudge the target up or down. Quick taps are combined into a single command.</p></div>
-      <div class="card"><div class="ico">❄️</div><h3>Mode &amp; fan</h3><p>Cool, dry, fan, auto, heat, fan speed and special modes like WindFree, Sleep and Quiet.</p></div>
-      <div class="card"><div class="ico">🌬️</div><h3>Aim the airflow</h3><p>Swing up/down and left/right, or lock the vanes at the exact angle you want.</p></div>
-      <div class="card"><div class="ico">⏰</div><h3>Schedules &amp; sleep timer</h3><p>On at 7:00 on weekdays, off at 23:30, or off in an hour. Runs even when your Mac sleeps.</p></div>
-      <div class="card"><div class="ico">💡</div><h3>Handy switches</h3><p>Display light, beep and auto-clean, one click each.</p></div>
-      <div class="card"><div class="ico">🎛️</div><h3>Only what your AC has</h3><p>Controls come from your AC's own capabilities, so you never see buttons that don't work.</p></div>
-      <div class="card"><div class="ico">🔐</div><h3>Sign in once</h3><p>Uses SmartThings' official login. Access renews by itself, with no tokens to paste every day.</p></div>
-      <div class="card"><div class="ico">🪶</div><h3>Tiny and native</h3><p>A ~1 MB SwiftUI app with no dependencies. Room temperature, humidity and online status at a glance.</p></div>
+      <div class="card"><div class="ico"><i data-lucide="power"></i></div><h3>Instant on/off</h3><p>One click from the menu bar. The icon shows the target temperature while the AC runs.</p></div>
+      <div class="card"><div class="ico"><i data-lucide="thermometer"></i></div><h3>Temperature</h3><p>Nudge the target up or down. Quick taps are combined into a single command.</p></div>
+      <div class="card"><div class="ico"><i data-lucide="snowflake"></i></div><h3>Mode &amp; fan</h3><p>Cool, dry, fan, auto, heat, fan speed and special modes like WindFree, Sleep and Quiet.</p></div>
+      <div class="card"><div class="ico"><i data-lucide="wind"></i></div><h3>Aim the airflow</h3><p>Swing up/down and left/right, or lock the vanes at the exact angle you want.</p></div>
+      <div class="card"><div class="ico"><i data-lucide="alarm-clock"></i></div><h3>Schedules &amp; sleep timer</h3><p>On at 7:00 on weekdays, off at 23:30, or off in an hour. Runs even when your Mac sleeps.</p></div>
+      <div class="card"><div class="ico"><i data-lucide="lightbulb"></i></div><h3>Handy switches</h3><p>Display light, beep and auto-clean, one click each.</p></div>
+      <div class="card"><div class="ico"><i data-lucide="sliders-horizontal"></i></div><h3>Only what your AC has</h3><p>Controls come from your AC's own capabilities, so you never see buttons that don't work.</p></div>
+      <div class="card"><div class="ico"><i data-lucide="shield-check"></i></div><h3>Sign in once</h3><p>Uses SmartThings' official login. Access renews by itself, with no tokens to paste every day.</p></div>
+      <div class="card"><div class="ico"><i data-lucide="feather"></i></div><h3>Tiny and native</h3><p>A ~1 MB SwiftUI app with no dependencies. Room temperature, humidity and online status at a glance.</p></div>
     </div>
   </section>
 
@@ -187,7 +188,7 @@
           <li><b>Switches:</b> display light, beep and auto-clean</li>
         </ul>
       </div>
-      <div class="spot-media"><img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/panel-light.png?v=1.4.1" alt="Aeris panel with airflow angle and swing controls" loading="lazy"></div>
+      <div class="spot-media"><picture><source srcset="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/panel-dark.png?v=1.4.3" media="(prefers-color-scheme: dark)"><img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/panel-light.png?v=1.4.3" alt="Aeris panel with airflow angle and swing controls" loading="lazy"></picture></div>
     </div>
     <div class="spot flip">
       <div>
@@ -200,7 +201,20 @@
           <li><b>Pause</b> a schedule without losing it, and resume it any time</li>
         </ul>
       </div>
-      <div class="spot-media"><img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/schedules-dark.png?v=1.4.1" alt="Aeris schedules screen with a sleep timer and on/off schedules" loading="lazy"></div>
+      <div class="spot-media"><picture><source srcset="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/schedules-dark.png?v=1.4.3" media="(prefers-color-scheme: dark)"><img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/schedules-light.png?v=1.4.3" alt="Aeris schedules screen with a sleep timer and on/off schedules" loading="lazy"></picture></div>
+    </div>
+    <div class="spot">
+      <div>
+        <span class="pill">Settings</span>
+        <h2>Simple to set up, nothing to babysit</h2>
+        <p>Sign in once and Aeris keeps its access renewed. Switch between air conditioners from a list, and start Aeris when you log in.</p>
+        <ul>
+          <li><b>One sign-in:</b> SmartThings' official login, renewed automatically</li>
+          <li><b>Several ACs?</b> Pick the one to control with a click</li>
+          <li><b>Launch at login</b>, so it's always in your menu bar</li>
+        </ul>
+      </div>
+      <div class="spot-media"><picture><source srcset="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/settings-dark.png?v=1.4.3" media="(prefers-color-scheme: dark)"><img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/settings-light.png?v=1.4.3" alt="Aeris settings with SmartThings sign-in and air conditioner list" loading="lazy"></picture></div>
     </div>
   </section>
 
@@ -232,7 +246,9 @@
   </footer>
 </div>
 <div class="toast" id="toast">Copied</div>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
 <script>
+  if (window.lucide) lucide.createIcons();
   document.querySelectorAll(".tab").forEach(function (tab) {
     tab.addEventListener("click", function () {
       document.querySelectorAll(".tab").forEach(function (t) { t.setAttribute("aria-selected", t === tab ? "true" : "false"); });
