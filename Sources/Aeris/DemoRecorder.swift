@@ -89,6 +89,16 @@ enum DemoRecorder {
             let sched = SchedulesView(done: {}).environmentObject(store).padding(12).frame(width: 320)
                 .background(Color(white: 0.16)).environment(\.colorScheme, .dark)
             writePNG(render(sched, scale: 2), to: dir.appendingPathComponent("real-schedules.png"))
+            AuthManager.shared.setDemoState(credentials: Credentials(kind: .cli, accessToken: ""), signingIn: false)
+            store.hasToken = true
+            store.deviceId = "demo"
+            store.devices = [STDevice(id: "demo", label: "Living room AC", isAC: true),
+                             STDevice(id: "demo2", label: "Bedroom AC", isAC: true)]
+            for scheme in [ColorScheme.light, .dark] {
+                let settings = SettingsView(done: {}).environmentObject(store).padding(12).frame(width: 320)
+                    .background(scheme == .dark ? Color(white: 0.16) : Color(white: 0.97)).environment(\.colorScheme, scheme)
+                writePNG(render(settings, scale: 2), to: dir.appendingPathComponent("real-settings-\(scheme == .dark ? "dark" : "light").png"))
+            }
             return
         }
         try? await Task.sleep(nanoseconds: 300_000_000)
