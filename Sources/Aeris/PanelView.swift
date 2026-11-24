@@ -18,12 +18,15 @@ private func pretty(_ v: String) -> String {
 struct PanelView: View {
     @EnvironmentObject var store: ACStore
     @State private var showSettings = false
+    @State private var showSchedules = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
             if !store.hasToken || showSettings {
                 SettingsView(done: { showSettings = false })
+            } else if showSchedules {
+                SchedulesView(done: { showSchedules = false })
             } else {
                 controls
             }
@@ -49,7 +52,13 @@ struct PanelView: View {
             if store.busy { ProgressView().controlSize(.small) }
             Button { Task { await store.refresh() } } label: { Image(systemName: "arrow.clockwise") }
                 .buttonStyle(.plain).foregroundStyle(.secondary).help("Refresh")
-            Button { showSettings.toggle() } label: { Image(systemName: "gearshape") }
+            if store.hasToken {
+                Button { showSchedules.toggle(); showSettings = false } label: {
+                    Image(systemName: store.sleepTimer != nil || store.schedules.contains(where: \.enabled) ? "clock.fill" : "clock")
+                }
+                .buttonStyle(.plain).foregroundStyle(.secondary).help("Schedules and timer")
+            }
+            Button { showSettings.toggle(); showSchedules = false } label: { Image(systemName: "gearshape") }
                 .buttonStyle(.plain).foregroundStyle(.secondary).help("Settings")
         }
     }

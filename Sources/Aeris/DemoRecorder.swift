@@ -69,6 +69,14 @@ enum DemoRecorder {
                     .environment(\.colorScheme, scheme)
                 writePNG(render(view, scale: 2), to: dir.appendingPathComponent("real-\(scheme == .dark ? "dark" : "light").png"))
             }
+            store.schedules = [ACSchedule(ruleId: "r1", turnOn: true, minutes: 7 * 60, days: ["Mon", "Tue", "Wed", "Thu", "Fri"]),
+                               ACSchedule(ruleId: "r2", turnOn: false, minutes: 23 * 60 + 30, days: []),
+                               ACSchedule(ruleId: nil, turnOn: true, minutes: 18 * 60, days: ["Sat", "Sun"])]
+            store.sleepTimer = SleepTimer(ruleId: "t", fireDate: Date().addingTimeInterval(3600))
+            store.scheduleTimeZone = TimeZone(identifier: "Asia/Colombo")
+            let sched = SchedulesView(done: {}).environmentObject(store).padding(14).frame(width: 300)
+                .background(Color(white: 0.16)).environment(\.colorScheme, .dark)
+            writePNG(render(sched, scale: 2), to: dir.appendingPathComponent("real-schedules.png"))
             return
         }
         try? await Task.sleep(nanoseconds: 300_000_000)

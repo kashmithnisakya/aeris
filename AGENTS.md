@@ -17,6 +17,8 @@ through the SmartThings REST API (`https://api.smartthings.com/v1`). No third-pa
 | `Sources/Aeris/SmartThingsClient.swift` | Thin REST client; status kept as loose JSON |
 | `Sources/Aeris/Auth.swift` | Sign-in state, token renewal; own-app OAuth code flow and `aeris://` callback |
 | `Sources/Aeris/SmartThingsCLI.swift` | Default sign-in: reads the SmartThings CLI's token, runs the CLI to renew it |
+| `Sources/Aeris/Schedules.swift` | On/off schedules and "turn off in" timer as SmartThings Rules |
+| `Sources/Aeris/SchedulesView.swift` | Schedules screen (clock button in the panel header) |
 | `Sources/Aeris/Keychain.swift` | Credentials storage in the login Keychain |
 | `Sources/Aeris/DemoRecorder.swift` | DEBUG-only renderer for README screenshots/GIF |
 | `scripts/build-app.sh` | Builds universal `dist/Aeris.app` + zip, ad-hoc signed |
@@ -66,6 +68,11 @@ Test env vars: `AERIS_ST_CLI` and `AERIS_ST_CREDENTIALS` (fake CLI and credentia
   `ACStore.featureSwitches` and hidden when the capability is missing or in `samsungce.unavailableCapabilities`.
 - Preview the panel for a real model: export `smartthings devices:status <id> -j > status.json`, then run the
   debug build with `AC_DEMO_STATUS=status.json AC_DEMO_OUT=<dir>` (renders `real-light/dark.png`).
+- Schedules are SmartThings Rules named `Aeris: …` (`/v1/rules?locationId=`), one `every.specific` with
+  reference `Midnight` + minute offset and optional `daysOfWeek` ["Mon"…]; the action is `switch.on/off`.
+  Times are in the location's time zone. Rules can't be disabled (status updates are rejected), so pausing
+  deletes the rule and keeps the schedule in UserDefaults. The timer is a one-day rule (`Aeris: Timer …`)
+  deleted after it fires; stray timer rules are cleaned up on load.
 - UI in the panel uses `.buttonStyle(.plain)` so `ImageRenderer` can draw it for demo media.
 
 ## Workflow

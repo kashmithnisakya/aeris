@@ -8,10 +8,15 @@ The section for each version is used as that version's GitHub release notes.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-24
+
 ### Added
 - **Airflow controls** for Samsung ACs that support them: up/down and left/right swing, or a fixed
   angle (steps 1–6 up/down, 1–5 left/right), and the left/right swing range (all, left, right).
 - Quick switches for the display light, beep and auto-clean, shown when your AC supports them.
+- **Schedules** (clock button): turn the AC on or off at a time on chosen days, pause or delete them.
+  They're saved in SmartThings, so they run even when your Mac is asleep or off.
+- **Turn off in** 30 min / 1 h / 2 h / 4 h, also run by SmartThings.
 
 ### Fixed
 - The **Sign in with SmartThings** button looked greyed out even though it worked.
@@ -69,7 +74,8 @@ First release of the menu bar app (as **AC Control**).
 - Launch at login.
 - Universal build for Apple Silicon and Intel, macOS 13 Ventura or later.
 
-[Unreleased]: https://github.com/kashmithnisakya/aeris/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/kashmithnisakya/aeris/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/kashmithnisakya/aeris/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/kashmithnisakya/aeris/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/kashmithnisakya/aeris/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/kashmithnisakya/aeris/compare/v1.0.0...v1.1.0
