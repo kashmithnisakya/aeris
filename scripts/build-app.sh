@@ -54,4 +54,6 @@ codesign --force --deep --sign - "$APP"
 
 echo "==> Zipping"
 (cd "$DIST" && ditto -c -k --keepParent "Aeris.app" "Aeris-$VERSION.zip")
-echo "Done: $DIST/Aeris-$VERSION.zip"
+# Fixed name so install.sh and the Homebrew cask can use releases/latest/download/Aeris.zip
+cp "$DIST/Aeris-$VERSION.zip" "$DIST/Aeris.zip"
+echo "Done: $DIST/Aeris-$VERSION.zip (+ Aeris.zip)"
