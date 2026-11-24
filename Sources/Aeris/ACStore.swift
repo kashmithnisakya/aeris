@@ -111,6 +111,98 @@ final class ACStore: ObservableObject {
         }
     }
 
+    /// Several commands in one request, with optimistic (capability, attribute, value) updates.
+    func sendAll(_ cmds: [STCommand], optimistic: [(String, String, Any)] = []) {
+        guard let client, let id = deviceId else { return }
+        for (cap, attr, v) in optimistic { status[cap, default: [:]][attr] = v }
+        Task {
+            busy = true
+            defer { busy = false }
+            do {
+                try await client.commands(deviceId: id, cmds)
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+            } catch {
+                self.error = error.localizedDescription
+            }
+            await refresh()
+        }
+    }
+
+    // MARK: - Airflow (samsungce.airConditionerAirFlowDirection)
+
+    static let airflowCap = "samsungce.airConditionerAirFlowDirection"
+
+    enum Axis { case vertical, horizontal
+        var name: String { self == .vertical ? "Vertical" : "Horizontal" }
+        var directionAttr: String { self == .vertical ? "verticalDirection" : "horizontalDirection" }
+        var stepAttr: String { self == .vertical ? "verticalAngleStep" : "horizontalAngleStep" }
+        var stepsAttr: String { self == .vertical ? "supportedVerticalAngleSteps" : "supportedHorizontalAngleSteps" }
+        var directionsAttr: String { self == .vertical ? "supportedVerticalDirections" : "supportedHorizontalDirections" }
+    }
+
+    var hasAirflow: Bool { has(Self.airflowCap) }
+    func airflowSteps(_ a: Axis) -> [String] { value(Self.airflowCap, a.stepsAttr) ?? [] }
+    func airflowCanSwing(_ a: Axis) -> Bool { (value(Self.airflowCap, a.directionsAttr) as [String]?)?.contains("swing") ?? false }
+    func airflowSwinging(_ a: Axis) -> Bool { (value(Self.airflowCap, a.directionAttr) as String?) == "swing" }
+    func airflowStep(_ a: Axis) -> String? { value(Self.airflowCap, a.stepAttr) }
+    var swingRanges: [String] { value(Self.airflowCap, "supportedHorizontalSwingRanges") ?? [] }
+    var swingRange: String? { value(Self.airflowCap, "horizontalSwingRange") }
+
+    func setAirflowSwing(_ a: Axis) {
+        sendAll([STCommand(Self.airflowCap, "set\(a.name)Direction", ["swing"])],
+                optimistic: [(Self.airflowCap, a.directionAttr, "swing")])
+    }
+
+    func setAirflowAngle(_ a: Axis, step: String) {
+        sendAll([STCommand(Self.airflowCap, "set\(a.name)Direction", ["fixed"]),
+                 STCommand(Self.airflowCap, "set\(a.name)AngleStep", [step])],
+                optimistic: [(Self.airflowCap, a.directionAttr, "fixed"), (Self.airflowCap, a.stepAttr, step)])
+    }
+
+    func setSwingRange(_ range: String) {
+        sendAll([STCommand(Self.airflowCap, "setHorizontalSwingRange", [range])],
+                optimistic: [(Self.airflowCap, "horizontalSwingRange", range)])
+    }
+
+    // MARK: - Feature switches
+
+    struct FeatureSwitch: Identifiable {
+        let id: String          // capability
+        let name: String
+        let icon: String
+        let attr: String
+        let onCommand: STCommand
+        let offCommand: STCommand
+    }
+
+    static let featureSwitches: [FeatureSwitch] = [
+        FeatureSwitch(id: "samsungce.airConditionerLighting", name: "Display light", icon: "lightbulb", attr: "lighting",
+                      onCommand: STCommand("samsungce.airConditionerLighting", "on"),
+                      offCommand: STCommand("samsungce.airConditionerLighting", "off")),
+        FeatureSwitch(id: "samsungce.airConditionerBeep", name: "Beep", icon: "speaker.wave.2", attr: "beep",
+                      onCommand: STCommand("samsungce.airConditionerBeep", "on"),
+                      offCommand: STCommand("samsungce.airConditionerBeep", "off")),
+        FeatureSwitch(id: "custom.autoCleaningMode", name: "Auto clean", icon: "sparkles", attr: "autoCleaningMode",
+                      onCommand: STCommand("custom.autoCleaningMode", "setAutoCleaningMode", ["on"]),
+                      offCommand: STCommand("custom.autoCleaningMode", "setAutoCleaningMode", ["off"])),
+    ]
+
+    /// Switches this AC actually reports (and isn't marking unavailable).
+    var availableSwitches: [FeatureSwitch] {
+        let unavailable: [String] = value("samsungce.unavailableCapabilities", "unavailableCommands") ?? []
+        return Self.featureSwitches.filter { sw in
+            has(sw.id) && (value(sw.id, sw.attr) as String?).map { $0 == "on" || $0 == "off" } == true
+                && !unavailable.contains("\(sw.id).\(sw.onCommand.command)")
+        }
+    }
+
+    func isSwitchOn(_ sw: FeatureSwitch) -> Bool { (value(sw.id, sw.attr) as String?) == "on" }
+
+    func toggle(_ sw: FeatureSwitch) {
+        let on = !isSwitchOn(sw)
+        sendAll([on ? sw.onCommand : sw.offCommand], optimistic: [(sw.id, sw.attr, on ? "on" : "off")])
+    }
+
     func togglePower() {
         let next = isOn ? "off" : "on"
         send("switch", next, optimistic: ("switch", next))
