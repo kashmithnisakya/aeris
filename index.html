@@ -1,2 +1,208 @@
-<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=https://github.com/kashmithnisakya/aeris">
-<title>Aeris</title><a href="https://github.com/kashmithnisakya/aeris">Aeris on GitHub</a>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aeris — your air conditioner, in the menu bar</title>
+<meta name="description" content="Aeris is a tiny macOS menu bar app for controlling a Samsung SmartThings air conditioner. Free and open source.">
+<meta property="og:title" content="Aeris — your air conditioner, in the menu bar">
+<meta property="og:description" content="Control a Samsung SmartThings air conditioner from the macOS menu bar.">
+<meta property="og:image" content="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/panel-dark.png">
+<link rel="icon" href="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/icon.png">
+<style>
+  :root {
+    --bg: #f6f8fb; --surface: #ffffff; --text: #141a22; --muted: #5d6877; --line: #e2e7ee;
+    --accent: #2f7cf6; --accent-soft: #e6effe; --code-bg: #0f1520; --code-text: #e6edf6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117; --surface: #151b23; --text: #e8edf3; --muted: #93a0b0; --line: #262f3a;
+      --accent: #5b9bff; --accent-soft: #17263d; --code-bg: #0a0e14; --code-text: #e6edf6;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 16px; }
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+  nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--text); }
+  nav .brand img { width: 30px; height: 30px; }
+  nav .links { display: flex; gap: 18px; font-size: 15px; }
+  nav .links a { color: var(--muted); }
+
+  header { text-align: center; padding: 40px 0 24px; }
+  header img.icon { width: 112px; height: 112px; }
+  h1 { font-size: clamp(36px, 7vw, 56px); line-height: 1.1; margin: 14px 0 8px; letter-spacing: -0.02em; }
+  .tagline { font-size: clamp(18px, 3vw, 22px); color: var(--muted); margin: 0 auto 28px; max-width: 560px; }
+
+  .install { max-width: 640px; margin: 0 auto; text-align: left; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+  .tab { border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px;
+         padding: 6px 14px; font: inherit; font-size: 14px; cursor: pointer; }
+  .tab[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); font-weight: 600; }
+  .cmd { display: flex; align-items: center; gap: 10px; background: var(--code-bg); color: var(--code-text);
+         border-radius: 12px; padding: 14px 14px 14px 18px; }
+  .cmd code { flex: 1; font: 14.5px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-x: auto;
+              white-space: nowrap; scrollbar-width: none; }
+  .cmd code::-webkit-scrollbar { display: none; }
+  .cmd code .p { color: #7d8b9c; user-select: none; }
+  .copy { flex: none; border: 0; border-radius: 8px; padding: 7px 12px; cursor: pointer; font: inherit;
+          font-size: 13px; font-weight: 600; background: #253041; color: #e6edf6; }
+  .copy:hover { background: #2f3d52; }
+  .hint { font-size: 14px; color: var(--muted); margin: 10px 2px 0; }
+  .hidden { display: none !important; }
+
+  .demo { margin: 44px auto 8px; text-align: center; }
+  .demo img { width: 100%; max-width: 760px; border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.25); }
+
+  section { padding: 44px 0 8px; }
+  h2 { font-size: 28px; margin: 0 0 18px; letter-spacing: -0.01em; }
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .card h3 { margin: 0 0 4px; font-size: 17px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  .card .ico { font-size: 22px; }
+
+  ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  ol.steps li { counter-increment: s; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+                padding: 16px 18px 16px 60px; position: relative; }
+  ol.steps li::before { content: counter(s); position: absolute; left: 18px; top: 15px; width: 28px; height: 28px;
+                        border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 15px;
+                        display: grid; place-items: center; }
+  ol.steps li .cmd { margin-top: 10px; }
+  .shots { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .shots img { width: 100%; max-width: 300px; border-radius: 12px; border: 1px solid var(--line); }
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-bottom: 10px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  details p, details ul { color: var(--muted); font-size: 15px; }
+  footer { text-align: center; color: var(--muted); font-size: 14px; padding: 48px 0 36px; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--text); color: var(--bg);
+           padding: 8px 14px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  @media (max-width: 560px) {
+    nav .links a.opt { display: none; }
+    ol.steps li { padding-left: 52px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="brand" href="#"><img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/icon.png" alt="">Aeris</a>
+    <div class="links">
+      <a href="#setup">Set up</a>
+      <a class="opt" href="#faq">FAQ</a>
+      <a href="https://github.com/kashmithnisakya/aeris/releases/latest">Releases</a>
+      <a href="https://github.com/kashmithnisakya/aeris">GitHub</a>
+    </div>
+  </nav>
+
+  <header>
+    <img class="icon" src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/icon.png" alt="Aeris app icon">
+    <h1>Aeris</h1>
+    <p class="tagline">Your air conditioner, in the menu bar. Control a Samsung SmartThings AC from your Mac in one click.</p>
+
+    <div class="install" id="install">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" aria-selected="true" data-tab="brew">Homebrew</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="script">Install script</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="zip">Download</button>
+      </div>
+      <div data-panel="brew">
+        <div class="cmd"><code><span class="p">$ </span>brew install --cask kashmithnisakya/tap/aeris</code><button class="copy" data-copy="brew install --cask kashmithnisakya/tap/aeris">Copy</button></div>
+        <p class="hint">Update later with <code>brew upgrade aeris</code>.</p>
+      </div>
+      <div data-panel="script" class="hidden">
+        <div class="cmd"><code><span class="p">$ </span>curl -fsSL https://raw.githubusercontent.com/kashmithnisakya/aeris/main/install.sh | bash</code><button class="copy" data-copy="curl -fsSL https://raw.githubusercontent.com/kashmithnisakya/aeris/main/install.sh | bash">Copy</button></div>
+        <p class="hint">No Homebrew needed. Run it again to update. <a href="https://github.com/kashmithnisakya/aeris/blob/main/install.sh">Read the script</a>.</p>
+      </div>
+      <div data-panel="zip" class="hidden">
+        <p class="hint" style="margin-top:0">Download <a href="https://github.com/kashmithnisakya/aeris/releases/latest/download/Aeris.zip">Aeris.zip</a>, unzip it and move <b>Aeris.app</b> to Applications. The app isn't notarized, so the first time right-click it and choose <b>Open</b>.</p>
+      </div>
+      <p class="hint">Free and open source · macOS 13 Ventura or later · Apple Silicon and Intel</p>
+    </div>
+  </header>
+
+  <div class="demo">
+    <img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/demo.gif" alt="Aeris demo: sign in, turn the AC on, change temperature, mode and fan from the menu bar" loading="lazy">
+  </div>
+
+  <section>
+    <h2>Everything you reach for, one click away</h2>
+    <div class="features">
+      <div class="card"><div class="ico">⏻</div><h3>Instant on/off</h3><p>One click from the menu bar. The icon shows the target temperature while the AC runs.</p></div>
+      <div class="card"><div class="ico">🌡️</div><h3>Temperature</h3><p>Nudge the target up or down. Quick taps are combined into a single command.</p></div>
+      <div class="card"><div class="ico">❄️</div><h3>Mode, fan &amp; swing</h3><p>Cool, dry, fan, auto, heat, fan speed, swing and special modes like WindFree and Sleep.</p></div>
+      <div class="card"><div class="ico">🎛️</div><h3>Only what your AC has</h3><p>Controls come from your AC's own capabilities, so you never see buttons that don't work.</p></div>
+      <div class="card"><div class="ico">🔐</div><h3>Sign in once</h3><p>Uses SmartThings' official login. Access renews by itself, with no tokens to paste every day.</p></div>
+      <div class="card"><div class="ico">🪶</div><h3>Tiny and native</h3><p>A ~1 MB SwiftUI app with no dependencies. Room temperature, humidity and online status at a glance.</p></div>
+    </div>
+  </section>
+
+  <section id="setup">
+    <h2>Set up in a minute</h2>
+    <ol class="steps">
+      <li><b>Install Aeris</b> with Homebrew, the install script or the download above.</li>
+      <li><b>Install the SmartThings CLI</b>, SmartThings' free official tool that Aeris uses to sign in.
+        <div class="cmd"><code><span class="p">$ </span>brew install smartthingscommunity/smartthings/smartthings</code><button class="copy" data-copy="brew install smartthingscommunity/smartthings/smartthings">Copy</button></div>
+      </li>
+      <li><b>Click the AC icon</b> in your menu bar, choose <b>Sign in with SmartThings</b> and log in to your Samsung account in the browser. That's it — your air conditioner appears.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Light or dark, it fits in</h2>
+    <div class="shots">
+      <img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/panel-light.png" alt="Aeris panel in light mode" loading="lazy">
+      <img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/panel-dark.png" alt="Aeris panel in dark mode" loading="lazy">
+    </div>
+  </section>
+
+  <section id="faq">
+    <h2>FAQ</h2>
+    <details><summary>Which air conditioners work?</summary>
+      <p>Air conditioners connected to Samsung SmartThings — mainly Samsung Wind-Free and other Samsung smart ACs. Aeris shows only the controls your model reports.</p></details>
+    <details><summary>Why do I need the SmartThings CLI?</summary>
+      <p>SmartThings' personal access tokens now expire after 24 hours, and registering an app with SmartThings needs a paid developer plan. The official CLI has a free sign-in that renews itself, so Aeris uses its login. Aeris reads only the CLI's current access token and asks the CLI to renew it; it never touches the CLI's refresh token.</p></details>
+    <details><summary>Where are my credentials stored?</summary>
+      <p>The CLI keeps its login in <code>~/Library/Application Support/@smartthings/cli</code>. Aeris stores its settings in your macOS Keychain. Aeris only talks to <code>api.smartthings.com</code>.</p></details>
+    <details><summary>How do I uninstall?</summary>
+      <ul>
+        <li>Homebrew: <code>brew uninstall --cask --zap aeris</code></li>
+        <li>Script: <code>curl -fsSL https://raw.githubusercontent.com/kashmithnisakya/aeris/main/install.sh | bash -s -- --uninstall</code></li>
+      </ul></details>
+    <details><summary>Is it affiliated with Samsung?</summary>
+      <p>No. Aeris is an independent, open-source project that uses the public SmartThings API. SmartThings is a trademark of Samsung.</p></details>
+  </section>
+
+  <footer>
+    Aeris is MIT-licensed. <a href="https://github.com/kashmithnisakya/aeris">Source</a> ·
+    <a href="https://github.com/kashmithnisakya/aeris/blob/main/CHANGELOG.md">Changelog</a> ·
+    <a href="https://github.com/kashmithnisakya/aeris/issues">Report an issue</a>
+  </footer>
+</div>
+<div class="toast" id="toast">Copied</div>
+<script>
+  document.querySelectorAll(".tab").forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      document.querySelectorAll(".tab").forEach(function (t) { t.setAttribute("aria-selected", t === tab ? "true" : "false"); });
+      document.querySelectorAll("[data-panel]").forEach(function (p) { p.classList.toggle("hidden", p.dataset.panel !== tab.dataset.tab); });
+    });
+  });
+  var toast = document.getElementById("toast"), timer;
+  document.querySelectorAll(".copy").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var text = btn.dataset.copy;
+      var done = function () {
+        btn.textContent = "Copied"; toast.classList.add("show");
+        clearTimeout(timer); timer = setTimeout(function () { btn.textContent = "Copy"; toast.classList.remove("show"); }, 1500);
+      };
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () {});
+    });
+  });
+</script>
+</body>
+</html>
