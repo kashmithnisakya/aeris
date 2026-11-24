@@ -65,7 +65,8 @@ struct PanelView: View {
             parts.append("Off")
         }
         if let t = store.roomTemp { parts.append("Room \(formatTemp(t))°") }
-        if let h = store.humidity { parts.append("\(Int(h))%") }
+        // Humidity only while off, so the line never truncates.
+        if !store.isOn, let h = store.humidity { parts.append("\(Int(h))% humidity") }
         return parts.joined(separator: " · ")
     }
 

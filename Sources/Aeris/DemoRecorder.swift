@@ -71,6 +71,7 @@ enum DemoRecorder {
 
     static func record(to dir: URL) async {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        UserDefaults.standard.set(true, forKey: "airflowExpanded")   // show the airflow controls
         let store = demoStore()
         if let path = ProcessInfo.processInfo.environment["AC_DEMO_STATUS"], let real = statusFromFile(path) {
             store.status = real
@@ -193,6 +194,7 @@ enum DemoRecorder {
                                 .background(Color(white: 0.14).opacity(0.97))
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.12)))
+                                .compositingGroup()
                                 .shadow(color: .black.opacity(0.4), radius: 18, y: 8)
                                 .padding(.trailing, 150)
                                 .padding(.top, 6)
@@ -210,7 +212,7 @@ enum DemoRecorder {
                         .padding(.bottom, 22)
                 }
             }
-            .frame(width: 760, height: 740)
+            .frame(width: 760, height: 830)
             .environment(\.colorScheme, .dark)
         }
 
