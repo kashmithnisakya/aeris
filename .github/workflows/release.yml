@@ -17,6 +17,11 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # tags are needed for the "Full diff" link
+
+      - name: Release notes from CHANGELOG.md
+        run: scripts/release-notes.sh "${{ github.event.inputs.version || github.ref_name }}" > "$RUNNER_TEMP/notes.md"
 
       - name: Build app
         run: scripts/build-app.sh "${{ github.event.inputs.version || github.ref_name }}"
@@ -28,6 +33,7 @@ jobs:
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" dist/*.zip --clobber
+            gh release edit "$TAG" --notes-file "$RUNNER_TEMP/notes.md"
           else
-            gh release create "$TAG" dist/*.zip --title "Aeris $TAG" --generate-notes
+            gh release create "$TAG" dist/*.zip --title "Aeris $TAG" --notes-file "$RUNNER_TEMP/notes.md"
           fi
