@@ -73,7 +73,7 @@ Both put **Aeris.app** in `/Applications` and launch it. Look for the AC icon in
 ### Update
 
 ```bash
-brew upgrade --cask --greedy aeris      # Homebrew
+brew upgrade aeris                      # Homebrew
 curl -fsSL https://raw.githubusercontent.com/kashmithnisakya/aeris/main/install.sh | bash   # script: re-run it
 ```
 
