@@ -31,13 +31,46 @@ target temperature next to the icon.
 
 ## Install
 
-1. Download `Aeris-x.y.z.zip` from the [latest release](../../releases/latest) and unzip it.
+**Homebrew**
+
+```bash
+brew install --cask kashmithnisakya/tap/aeris
+```
+
+**Install script** (no Homebrew needed)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kashmithnisakya/aeris/main/install.sh | bash
+```
+
+Both put **Aeris.app** in `/Applications` and launch it. Look for the AC icon in your menu bar.
+
+<details>
+<summary>Manual download</summary>
+
+1. Download `Aeris.zip` from the [latest release](../../releases/latest) and unzip it.
 2. Move **Aeris.app** to your Applications folder.
 3. The app isn't notarized by Apple, so the first time **right-click it → Open → Open**.
    If macOS still refuses, run:
    ```bash
    xattr -dr com.apple.quarantine "/Applications/Aeris.app"
    ```
+
+</details>
+
+### Update
+
+```bash
+brew upgrade --cask --greedy aeris      # Homebrew
+curl -fsSL https://raw.githubusercontent.com/kashmithnisakya/aeris/main/install.sh | bash   # script: re-run it
+```
+
+### Uninstall
+
+```bash
+brew uninstall --cask --zap aeris       # Homebrew
+curl -fsSL https://raw.githubusercontent.com/kashmithnisakya/aeris/main/install.sh | bash -s -- --uninstall   # script
+```
 
 ## Set up
 

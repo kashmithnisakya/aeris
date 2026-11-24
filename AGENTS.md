@@ -20,6 +20,7 @@ through the SmartThings REST API (`https://api.smartthings.com/v1`). No third-pa
 | `scripts/build-app.sh` | Builds universal `dist/Aeris.app` + zip, ad-hoc signed |
 | `scripts/make-icon.swift` | Draws the app icon |
 | `scripts/make-demo.sh` | Regenerates screenshots, GIF and MP4 into `dist/demo/` |
+| `install.sh` | One-line installer/uninstaller; downloads `releases/latest/download/Aeris.zip` |
 | `.github/workflows/release.yml` | On `v*` tag: build and attach zip to a GitHub release |
 
 ## Commands
@@ -50,4 +51,6 @@ Test without touching a real AC by pointing the app at a mock server:
 - Screenshots and videos live on the orphan `assets` branch, not on `main`. Reference them with
   `https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/<file>`.
 - Release by pushing a tag: `git tag v1.2.3 && git push origin v1.2.3`.
+  Every release must include a fixed-name `Aeris.zip` (build-app.sh makes it): `install.sh` and the
+  Homebrew cask in `kashmithnisakya/homebrew-tap` (`Casks/aeris.rb`, `version :latest`) download it.
 - Don't add AI co-author trailers to commits or PRs.
