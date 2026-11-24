@@ -8,6 +8,12 @@ The section for each version is used as that version's GitHub release notes.
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-11-24
+
+### Changed
+- Airflow angles use a **slider** instead of a row of numbers. Drag or click to aim; the AC is updated
+  when you let go. While swinging, the slider is dimmed. Drag it to fix the angle.
+
 ## [1.3.0] - 2026-11-24
 
 ### Added
@@ -74,7 +80,8 @@ First release of the menu bar app (as **AC Control**).
 - Launch at login.
 - Universal build for Apple Silicon and Intel, macOS 13 Ventura or later.
 
-[Unreleased]: https://github.com/kashmithnisakya/aeris/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/kashmithnisakya/aeris/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/kashmithnisakya/aeris/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/kashmithnisakya/aeris/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/kashmithnisakya/aeris/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/kashmithnisakya/aeris/compare/v1.1.0...v1.1.1
