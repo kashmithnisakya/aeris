@@ -8,6 +8,19 @@ The section for each version is used as that version's GitHub release notes.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-24
+
+### Added
+- **Sign in with SmartThings.** Sign in once and Aeris renews its access by itself, instead of needing
+  a new personal access token every 24 hours. Sign-in uses SmartThings' free, official command-line
+  tool (`brew install smartthingscommunity/smartthings/smartthings`); Settings shows the install
+  command if it's missing.
+- Optional: sign in with your own SmartThings app (developer plan) by entering its Client ID and Secret.
+
+### Changed
+- Pasting a personal access token moved to Settings → Advanced. A token saved by an earlier version
+  keeps working until it expires.
+
 ## [1.1.1] - 2026-11-24
 
 No changes to the app itself. This release makes Aeris easier to install and update.
@@ -47,7 +60,8 @@ First release of the menu bar app (as **AC Control**).
 - Launch at login.
 - Universal build for Apple Silicon and Intel, macOS 13 Ventura or later.
 
-[Unreleased]: https://github.com/kashmithnisakya/aeris/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/kashmithnisakya/aeris/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/kashmithnisakya/aeris/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/kashmithnisakya/aeris/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/kashmithnisakya/aeris/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/kashmithnisakya/aeris/releases/tag/v1.0.0

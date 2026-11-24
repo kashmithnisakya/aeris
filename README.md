@@ -86,16 +86,41 @@ curl -fsSL https://raw.githubusercontent.com/kashmithnisakya/aeris/main/install.
 
 ## Set up
 
-1. Create a SmartThings personal access token at <https://account.smartthings.com/tokens>.
-   Tick the **Devices** permissions (list, see, control).
-2. Click the AC icon in the menu bar, paste the token and press **Save**.
-3. The first air conditioner on your account is picked automatically. To choose another,
-   open ⚙ Settings → Device.
+Aeris signs in through SmartThings' official command-line tool, which is free and renews its login
+by itself. You only sign in once.
 
-Tick **Launch at login** at the bottom of the panel to start it automatically.
+1. Install the SmartThings CLI (once):
+   ```bash
+   brew install smartthingscommunity/smartthings/smartthings
+   ```
+2. Click the AC icon in the menu bar and press **Sign in with SmartThings**.
+3. If a browser opens, log in to your Samsung account and allow access. Done.
 
-> SmartThings personal access tokens can expire. If the app says the token was rejected,
-> create a new one and paste it in Settings.
+The first air conditioner on your account is picked automatically. To choose another, open
+⚙ Settings → Device. Tick **Launch at login** at the bottom of the panel to start Aeris with your Mac.
+
+<details>
+<summary>How sign-in works</summary>
+
+The SmartThings CLI keeps its login in `~/Library/Application Support/@smartthings/cli/credentials.json`.
+Aeris reads the current access token from there and calls the SmartThings API directly. Shortly before
+the 24-hour token expires (or if SmartThings rejects it), Aeris runs `smartthings locations` in the
+background so the CLI renews it. Aeris never uses or stores the CLI's refresh token.
+Signing out in Aeris doesn't sign the CLI out.
+
+If you don't use your Mac for about a month, SmartThings may ask you to sign in again.
+</details>
+
+<details>
+<summary>Other ways to connect (advanced)</summary>
+
+- **Your own SmartThings app.** With a SmartThings developer plan you can register an API Access app
+  (`smartthings smartapps:create`, redirect URI `https://kashmithnisakya.github.io/aeris/callback/`,
+  scopes `r:devices:*`, `x:devices:*`, `r:locations:*`) and paste its Client ID and Secret under
+  ⚙ Settings → Advanced. Aeris then signs in with that app instead of the CLI.
+- **Personal access token.** Paste a token from <https://account.smartthings.com/tokens> under
+  ⚙ Settings → Advanced. SmartThings makes these expire after 24 hours.
+</details>
 
 ## Build from source
 

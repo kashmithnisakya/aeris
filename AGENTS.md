@@ -15,7 +15,9 @@ through the SmartThings REST API (`https://api.smartthings.com/v1`). No third-pa
 | `Sources/Aeris/PanelView.swift` | The drop-down panel UI, settings view, chip flow layout |
 | `Sources/Aeris/ACStore.swift` | `@MainActor` state: polling, commands, debounced setpoint, launch-at-login |
 | `Sources/Aeris/SmartThingsClient.swift` | Thin REST client; status kept as loose JSON |
-| `Sources/Aeris/Keychain.swift` | Token storage in the login Keychain |
+| `Sources/Aeris/Auth.swift` | Sign-in state, token renewal; own-app OAuth code flow and `aeris://` callback |
+| `Sources/Aeris/SmartThingsCLI.swift` | Default sign-in: reads the SmartThings CLI's token, runs the CLI to renew it |
+| `Sources/Aeris/Keychain.swift` | Credentials storage in the login Keychain |
 | `Sources/Aeris/DemoRecorder.swift` | DEBUG-only renderer for README screenshots/GIF |
 | `scripts/build-app.sh` | Builds universal `dist/Aeris.app` + zip, ad-hoc signed |
 | `scripts/make-icon.swift` | Draws the app icon |
@@ -36,6 +38,21 @@ scripts/make-demo.sh           # demo media in dist/demo/
 Test without touching a real AC by pointing the app at a mock server:
 `AERIS_API=http://127.0.0.1:8799 AERIS_TOKEN=test swift run`.
 `AERIS_TOKEN` bypasses the Keychain and is meant only for development.
+
+Sign-in (default): registering a SmartThings OAuth app needs a paid developer plan, so Aeris uses the
+official SmartThings CLI's login. It reads `accessToken`/`expires` for `default:api.smartthings.com` from
+`~/Library/Application Support/@smartthings/cli/credentials.json` and, when the token is within 5 minutes
+of expiry or gets a 401, runs `smartthings locations --json` so the CLI renews (or opens the browser to
+log in). Never read, use or store the CLI's refresh token. Renewals are serialized in `AuthManager`.
+
+Own-app sign-in (optional, developer plan): with a client ID/secret (built in from the `AERIS_CLIENT_ID`
+/ `AERIS_CLIENT_SECRET` repo secrets, or entered in Settings) Aeris uses the OAuth code flow via
+`https://api.smartthings.com/v1/oauth/authorize` → `https://kashmithnisakya.github.io/aeris/callback/`
+(`gh-pages` branch) → `aeris://oauth/callback`. Refresh tokens are single-use.
+
+Test env vars: `AERIS_ST_CLI` and `AERIS_ST_CREDENTIALS` (fake CLI and credentials file),
+`AERIS_CLIENT_ID` / `AERIS_CLIENT_SECRET`, `AERIS_KEYCHAIN_SERVICE` (isolated Keychain),
+`AERIS_POLL_SECONDS`, and in debug builds `AERIS_TEST_SIGNIN=1`.
 
 ## Conventions
 

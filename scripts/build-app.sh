@@ -18,6 +18,15 @@ swift build -c release --arch arm64 --arch x86_64
 BIN="$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)/Aeris"
 cp "$BIN" "$APP/Contents/MacOS/Aeris"
 
+# SmartThings OAuth app baked into the build (optional). Release builds get these from GitHub secrets;
+# without them, users enter their own SmartThings app in Settings.
+CLIENT_KEYS=""
+if [ -n "${AERIS_CLIENT_ID:-}" ] && [ -n "${AERIS_CLIENT_SECRET:-}" ]; then
+  echo "==> Including SmartThings sign-in client"
+  CLIENT_KEYS="  <key>AerisClientID</key><string>${AERIS_CLIENT_ID}</string>
+  <key>AerisClientSecret</key><string>${AERIS_CLIENT_SECRET}</string>"
+fi
+
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -34,6 +43,14 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>LSUIElement</key><true/>
   <key>NSHighResolutionCapable</key><true/>
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLName</key><string>com.kashmithnisakya.aeris.signin</string>
+      <key>CFBundleURLSchemes</key><array><string>aeris</string></array>
+    </dict>
+  </array>
+$CLIENT_KEYS
 </dict>
 </plist>
 PLIST
