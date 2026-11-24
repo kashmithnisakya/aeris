@@ -3,7 +3,8 @@ import Foundation
 
 /// What Aeris uses to call the SmartThings API.
 struct Credentials: Codable, Equatable {
-    enum Kind: String, Codable { case oauth, pat }
+    /// oauth: Aeris's own SmartThings app; cli: the SmartThings CLI's login; pat: personal access token.
+    enum Kind: String, Codable { case oauth, cli, pat }
     var kind: Kind
     var accessToken: String
     var refreshToken: String?
@@ -71,15 +72,35 @@ final class AuthManager: ObservableObject {
 
     /// Opens the SmartThings sign-in page. Tests can pass their own opener.
     func beginSignIn(open: (URL) -> Void = { NSWorkspace.shared.open($0) }) {
-        guard let client else {
-            lastError = "Add your SmartThings app's Client ID and Secret first."
-            return
-        }
+        guard let client else { return beginCLISignIn() }
         let state = UUID().uuidString
         pendingState = state
         signingIn = true
         lastError = nil
         open(authorizeURL(client: client, state: state))
+    }
+
+    /// Sign in through the SmartThings CLI: it opens the browser if it isn't logged in yet.
+    func beginCLISignIn() {
+        guard SmartThingsCLI.isInstalled else {
+            lastError = "Install the SmartThings CLI first (see below), then click Sign in again."
+            return
+        }
+        signingIn = true
+        lastError = nil
+        Task {
+            defer { signingIn = false }
+            do {
+                try await SmartThingsCLI.ensureLoggedIn(timeout: 600)
+                guard SmartThingsCLI.currentToken() != nil else {
+                    throw STError(message: "The SmartThings CLI didn't save a login. Try again.")
+                }
+                guard signingIn else { return }   // cancelled meanwhile
+                store(Credentials(kind: .cli, accessToken: ""))
+            } catch {
+                if signingIn { lastError = error.localizedDescription }
+            }
+        }
     }
 
     func cancelSignIn() {
@@ -139,6 +160,7 @@ final class AuthManager: ObservableObject {
     /// A valid access token, renewing it first if it's about to expire (or if `forceRefresh`).
     func accessToken(forceRefresh: Bool = false) async throws -> String {
         guard let creds = credentials else { throw STError(message: "Sign in with SmartThings to continue.") }
+        if creds.kind == .cli { return try await cliAccessToken(forceRefresh: forceRefresh) }
         guard creds.kind == .oauth else {
             if forceRefresh {
                 throw STError(message: "Your personal access token expired. Sign in with SmartThings so Aeris can renew access by itself.")
@@ -152,6 +174,25 @@ final class AuthManager: ObservableObject {
         let task = Task { () throws -> String in
             defer { refreshTask = nil }
             return try await renew(creds)
+        }
+        refreshTask = task
+        return try await task.value
+    }
+
+    /// Reads the CLI's token; when it's close to expiry (or rejected) asks the CLI to renew it.
+    private func cliAccessToken(forceRefresh: Bool) async throws -> String {
+        let soon = Date().addingTimeInterval(5 * 60)
+        if !forceRefresh, let t = SmartThingsCLI.currentToken(), t.expires > soon { return t.value }
+        if let running = refreshTask { return try await running.value }
+        let before = SmartThingsCLI.currentToken()?.value
+        let task = Task { () throws -> String in
+            defer { refreshTask = nil }
+            try await SmartThingsCLI.ensureLoggedIn(timeout: 180)
+            guard let t = SmartThingsCLI.currentToken(), t.expires > Date(),
+                  !(forceRefresh && t.value == before && t.expires <= soon) else {
+                throw STError(message: "SmartThings sign-in expired. Click Sign in with SmartThings in Settings.")
+            }
+            return t.value
         }
         refreshTask = task
         return try await task.value

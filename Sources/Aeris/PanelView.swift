@@ -197,10 +197,11 @@ struct SettingsView: View {
             HStack {
                 ProgressView().controlSize(.small)
                 Text("Finish signing in in your browser…").font(.callout)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 Button("Cancel") { auth.cancelSignIn() }.buttonStyle(.plain).font(.caption).foregroundStyle(.secondary)
             }
-        } else if let c = auth.credentials, c.kind == .oauth {
+        } else if let c = auth.credentials, c.kind != .pat {
             HStack {
                 Label("Signed in — access renews automatically", systemImage: "checkmark.seal.fill")
                     .font(.callout).foregroundStyle(.green)
@@ -222,12 +223,39 @@ struct SettingsView: View {
                     .foregroundStyle(.white)
             }
             .buttonStyle(.plain)
-            .disabled(auth.client == nil)
-            if auth.client == nil {
-                Text("Add your SmartThings app below to enable sign-in.").font(.caption).foregroundStyle(.secondary)
-            }
+            .disabled(auth.client == nil && !cliInstalled)
+            if auth.client == nil && !cliInstalled { installCLI }
         }
     }
+
+    private var cliInstalled: Bool { SmartThingsCLI.isInstalled }
+
+    /// Shown when sign-in needs the SmartThings CLI and it isn't installed.
+    private var installCLI: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Sign-in uses SmartThings' official command-line tool. Install it once in Terminal:")
+                .font(.caption).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack {
+                Text(Self.installCommand)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+                    .lineLimit(2)
+                Spacer()
+                Button {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(Self.installCommand, forType: .string)
+                } label: { Image(systemName: "doc.on.doc") }
+                .buttonStyle(.plain).help("Copy")
+            }
+            .padding(6)
+            .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
+            Button("I've installed it") { auth.objectWillChange.send() }
+                .buttonStyle(.plain).font(.caption).foregroundStyle(Color.accentColor)
+        }
+    }
+
+    static let installCommand = "brew install smartthingscommunity/smartthings/smartthings"
 
     private var ownApp: some View {
         DisclosureGroup(isExpanded: $showClient) {
@@ -254,9 +282,8 @@ struct SettingsView: View {
             }
             .padding(.top, 4)
         } label: {
-            Text("Your SmartThings app").font(.caption)
+            Text("Advanced: your own SmartThings app (developer plan)").font(.caption)
         }
-        .onAppear { if auth.customClient == nil { showClient = true } }
     }
 
     private var advancedToken: some View {
