@@ -61,6 +61,11 @@ Test env vars: `AERIS_ST_CLI` and `AERIS_ST_CREDENTIALS` (fake CLI and credentia
   listed in `custom.disabledCapabilities`. Supported option lists come from the status
   (`supportedAcModes`, `supportedAcFanModes`, …), never hard-coded.
 - Never log, print or commit tokens, device IDs or location IDs.
+- Airflow uses `samsungce.airConditionerAirFlowDirection` (set{Vertical,Horizontal}Direction swing/fixed,
+  set{Vertical,Horizontal}AngleStep "1"…, setHorizontalSwingRange). Feature switches are listed in
+  `ACStore.featureSwitches` and hidden when the capability is missing or in `samsungce.unavailableCapabilities`.
+- Preview the panel for a real model: export `smartthings devices:status <id> -j > status.json`, then run the
+  debug build with `AC_DEMO_STATUS=status.json AC_DEMO_OUT=<dir>` (renders `real-light/dark.png`).
 - UI in the panel uses `.buttonStyle(.plain)` so `ImageRenderer` can draw it for demo media.
 
 ## Workflow

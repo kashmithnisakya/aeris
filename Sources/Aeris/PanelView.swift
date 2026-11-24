@@ -97,9 +97,12 @@ struct PanelView: View {
                     list: "supportedFanOscillationModes", command: "setFanOscillationMode")
             chipRow("Special", cap: "custom.airConditionerOptionalMode", current: "acOptionalMode",
                     list: "supportedAcOptionalMode", command: "setAcOptionalMode")
+            if store.hasAirflow { airflow }
         }
         .disabled(!store.isOn)
         .opacity(store.isOn ? 1 : 0.45)
+
+        if !store.availableSwitches.isEmpty { featureSwitches }
 
         Divider()
         HStack {
@@ -111,6 +114,81 @@ struct PanelView: View {
             Button("Quit") { NSApp.terminate(nil) }
                 .buttonStyle(.plain).font(.caption).foregroundStyle(.secondary)
         }
+    }
+
+    // MARK: Airflow
+
+    @ViewBuilder private var airflow: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text("Airflow").font(.caption).foregroundStyle(.secondary)
+            axisRow(.vertical, title: "Up / Down", start: "arrow.up", end: "arrow.down")
+            axisRow(.horizontal, title: "Left / Right", start: "arrow.left", end: "arrow.right")
+            if store.airflowSwinging(.horizontal), store.swingRanges.count > 1 {
+                HStack(spacing: 5) {
+                    Text("Swing range").font(.caption2).foregroundStyle(.secondary)
+                    ForEach(store.swingRanges, id: \.self) { r in
+                        chip(pretty(r), selected: r == store.swingRange) { store.setSwingRange(r) }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func axisRow(_ axis: ACStore.Axis, title: String, start: String, end: String) -> some View {
+        let steps = store.airflowSteps(axis)
+        if !steps.isEmpty || store.airflowCanSwing(axis) {
+            let swinging = store.airflowSwinging(axis)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.caption2).foregroundStyle(.secondary)
+                HStack(spacing: 4) {
+                    if store.airflowCanSwing(axis) {
+                        chip("Swing", selected: swinging) { store.setAirflowSwing(axis) }
+                            .padding(.trailing, 4)
+                    }
+                    Image(systemName: start).font(.caption2).foregroundStyle(.secondary)
+                    ForEach(steps, id: \.self) { step in
+                        chip(step, selected: !swinging && step == store.airflowStep(axis), compact: true) {
+                            store.setAirflowAngle(axis, step: step)
+                        }
+                    }
+                    Image(systemName: end).font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    // MARK: Feature switches
+
+    private var featureSwitches: some View {
+        FlowLayout(spacing: 5) {
+            ForEach(store.availableSwitches) { sw in
+                let on = store.isSwitchOn(sw)
+                Button { store.toggle(sw) } label: {
+                    Label(sw.name, systemImage: on ? sw.icon + ".fill" : sw.icon)
+                        .font(.caption)
+                        .padding(.horizontal, 9).padding(.vertical, 5)
+                        .background(on ? Color.accentColor.opacity(0.18) : Color.secondary.opacity(0.12),
+                                    in: Capsule())
+                        .overlay(Capsule().stroke(on ? Color.accentColor : .clear, lineWidth: 1))
+                        .foregroundStyle(on ? Color.accentColor : Color.primary)
+                }
+                .buttonStyle(.plain)
+                .help("\(sw.name): \(on ? "on" : "off")")
+            }
+        }
+    }
+
+    private func chip(_ title: String, selected: Bool, compact: Bool = false, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.callout).monospacedDigit()
+                .padding(.horizontal, compact ? 0 : 9).padding(.vertical, 4)
+                .frame(minWidth: compact ? 26 : nil)
+                .background(selected ? Color.accentColor : Color.secondary.opacity(0.15), in: Capsule())
+                .foregroundStyle(selected ? Color.white : Color.primary)
+        }
+        .buttonStyle(.plain)
     }
 
     private func stepButton(_ icon: String, action: @escaping () -> Void) -> some View {

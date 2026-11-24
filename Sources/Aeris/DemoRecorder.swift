@@ -40,9 +40,37 @@ enum DemoRecorder {
 
     struct Frame { let open: Bool; let caption: String; let seconds: Double; let change: (ACStore) -> Void }
 
+    /// Status from a `smartthings devices:status -j` export (AC_DEMO_STATUS), to preview a real model.
+    private static func statusFromFile(_ path: String) -> [String: [String: Any]]? {
+        guard let data = FileManager.default.contents(atPath: path),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let main = (json["components"] as? [String: Any])?["main"] as? [String: Any] else { return nil }
+        var out: [String: [String: Any]] = [:]
+        for (cap, attrs) in main {
+            guard let attrs = attrs as? [String: Any] else { continue }
+            var values: [String: Any] = [:]
+            for (name, obj) in attrs {
+                if let obj = obj as? [String: Any], let v = obj["value"], !(v is NSNull) { values[name] = v }
+            }
+            out[cap] = values
+        }
+        return out
+    }
+
     static func record(to dir: URL) async {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let store = demoStore()
+        if let path = ProcessInfo.processInfo.environment["AC_DEMO_STATUS"], let real = statusFromFile(path) {
+            store.status = real
+            store.deviceName = "My AC"
+            for scheme in [ColorScheme.light, .dark] {
+                let view = PanelView().environmentObject(store)
+                    .background(scheme == .dark ? Color(white: 0.16) : Color(white: 0.97))
+                    .environment(\.colorScheme, scheme)
+                writePNG(render(view, scale: 2), to: dir.appendingPathComponent("real-\(scheme == .dark ? "dark" : "light").png"))
+            }
+            return
+        }
         try? await Task.sleep(nanoseconds: 300_000_000)
 
         // Static screenshots of the panel (AC on), light and dark.

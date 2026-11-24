@@ -6,6 +6,15 @@ struct STError: LocalizedError {
     var errorDescription: String? { message }
 }
 
+struct STCommand {
+    let capability: String
+    let command: String
+    let arguments: [Any]
+    init(_ capability: String, _ command: String, _ arguments: [Any] = []) {
+        self.capability = capability; self.command = command; self.arguments = arguments
+    }
+}
+
 struct STDevice: Identifiable, Hashable {
     let id: String
     let label: String
@@ -99,9 +108,14 @@ struct SmartThingsClient {
     }
 
     func command(deviceId: String, capability: String, command: String, arguments: [Any] = []) async throws {
-        let body: [String: Any] = ["commands": [[
-            "component": "main", "capability": capability, "command": command, "arguments": arguments,
-        ]]]
+        try await commands(deviceId: deviceId, [STCommand(capability, command, arguments)])
+    }
+
+    /// Sends several commands in one request; SmartThings applies them in order.
+    func commands(deviceId: String, _ list: [STCommand]) async throws {
+        let body: [String: Any] = ["commands": list.map {
+            ["component": "main", "capability": $0.capability, "command": $0.command, "arguments": $0.arguments]
+        }]
         _ = try await request("POST", "devices/\(deviceId)/commands", body: body)
     }
 }

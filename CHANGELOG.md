@@ -8,6 +8,11 @@ The section for each version is used as that version's GitHub release notes.
 
 ## [Unreleased]
 
+### Added
+- **Airflow controls** for Samsung ACs that support them: up/down and left/right swing, or a fixed
+  angle (steps 1–6 up/down, 1–5 left/right), and the left/right swing range (all, left, right).
+- Quick switches for the display light, beep and auto-clean, shown when your AC supports them.
+
 ### Fixed
 - The **Sign in with SmartThings** button looked greyed out even though it worked.
 - "Finish signing in in your browser" now shows a browser icon instead of a spinner.
