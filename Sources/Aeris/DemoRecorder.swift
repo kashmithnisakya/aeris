@@ -57,9 +57,21 @@ enum DemoRecorder {
         store.status["switch"]?["switch"] = "off"
 
         let set: (String, String, Any) -> (ACStore) -> Void = { cap, attr, v in { $0.status[cap]?[attr] = v } }
+        let auth = AuthManager.shared
+        let signedOut: (ACStore) -> Void = { s in
+            s.hasToken = false
+            auth.setDemoState(credentials: nil, signingIn: false)
+        }
         let frames: [Frame] = [
-            Frame(open: false, caption: "Aeris lives in your menu bar", seconds: 1.6) { _ in },
-            Frame(open: true, caption: "Click the icon to open the panel", seconds: 1.4) { _ in },
+            Frame(open: false, caption: "Aeris lives in your menu bar", seconds: 1.6, change: signedOut),
+            Frame(open: true, caption: "Sign in once with SmartThings", seconds: 1.8) { _ in },
+            Frame(open: true, caption: "Log in to SmartThings in your browser", seconds: 1.6) { _ in
+                auth.setDemoState(credentials: nil, signingIn: true)
+            },
+            Frame(open: true, caption: "Signed in. Aeris renews access by itself", seconds: 2.0) { s in
+                auth.setDemoState(credentials: Credentials(kind: .cli, accessToken: ""), signingIn: false)
+                s.hasToken = true
+            },
             Frame(open: true, caption: "One click to turn it on", seconds: 1.6, change: set("switch", "switch", "on")),
             Frame(open: true, caption: "Set the temperature", seconds: 0.6, change: set("thermostatCoolingSetpoint", "coolingSetpoint", NSNumber(value: 25))),
             Frame(open: true, caption: "Set the temperature", seconds: 1.2, change: set("thermostatCoolingSetpoint", "coolingSetpoint", NSNumber(value: 26))),

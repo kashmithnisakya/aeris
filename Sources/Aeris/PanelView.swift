@@ -195,7 +195,7 @@ struct SettingsView: View {
     @ViewBuilder private var account: some View {
         if auth.signingIn {
             HStack {
-                ProgressView().controlSize(.small)
+                Image(systemName: "safari").foregroundStyle(Color.accentColor)
                 Text("Finish signing in in your browser…").font(.callout)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer()
@@ -218,7 +218,7 @@ struct SettingsView: View {
                 Label("Sign in with SmartThings", systemImage: "person.crop.circle.badge.checkmark")
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
-                    .background(auth.client == nil ? Color.secondary.opacity(0.3) : Color.accentColor,
+                    .background(auth.client == nil && !cliInstalled ? Color.secondary.opacity(0.3) : Color.accentColor,
                                 in: RoundedRectangle(cornerRadius: 9))
                     .foregroundStyle(.white)
             }

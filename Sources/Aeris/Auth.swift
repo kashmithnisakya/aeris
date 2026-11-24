@@ -54,6 +54,15 @@ final class AuthManager: ObservableObject {
     var hasBuiltInClient: Bool { AuthConfig.builtInClient != nil }
     var isSignedIn: Bool { credentials != nil }
 
+    #if DEBUG
+    /// README demo rendering only.
+    func setDemoState(credentials: Credentials?, signingIn: Bool) {
+        self.credentials = credentials
+        self.signingIn = signingIn
+        self.lastError = nil
+    }
+    #endif
+
     private init() {
         customClient = Keychain.get(OAuthClient.self, .oauthClient)
         if let env = ProcessInfo.processInfo.environment["AERIS_TOKEN"], !env.isEmpty {
