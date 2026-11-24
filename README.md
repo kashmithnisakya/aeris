@@ -1,6 +1,10 @@
-# Aeris
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/icon.png" alt="Aeris app icon" width="128" height="128">
+</p>
 
-**Your air conditioner, in the menu bar.**
+<h1 align="center">Aeris</h1>
+
+<p align="center"><strong>Your air conditioner, in the menu bar.</strong></p>
 
 Aeris is a tiny macOS menu bar app for controlling a Samsung / SmartThings air conditioner.
 
