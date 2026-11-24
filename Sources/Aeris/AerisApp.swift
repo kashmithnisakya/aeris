@@ -3,7 +3,6 @@ import SwiftUI
 @main
 struct AerisApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var store = ACStore()
 
     init() {
         #if DEBUG
@@ -12,13 +11,29 @@ struct AerisApp: App {
         #endif
     }
 
+    // The menu bar item and panel are managed by StatusPanelController (see StatusPanel.swift).
     var body: some Scene {
-        MenuBarExtra {
-            PanelView().environmentObject(store)
-        } label: {
-            MenuBarLabel().environmentObject(store)
+        Settings { EmptyView() }
+    }
+}
+
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    private var store: ACStore?
+    private var statusPanel: StatusPanelController?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        if ProcessInfo.processInfo.environment["AC_DEMO_OUT"] != nil { return }   // demo rendering only
+        let store = ACStore()
+        self.store = store
+        statusPanel = StatusPanelController(store: store)
+    }
+
+    /// Receives aeris:// URLs from the sign-in callback page.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls {
+            Task { @MainActor in await AuthManager.shared.handleCallback(url) }
         }
-        .menuBarExtraStyle(.window)
     }
 }
 
