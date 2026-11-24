@@ -4,6 +4,12 @@ import SwiftUI
 struct ACControlApp: App {
     @StateObject private var store = ACStore()
 
+    init() {
+        #if DEBUG
+        DemoRecorder.startIfRequested()
+        #endif
+    }
+
     var body: some Scene {
         MenuBarExtra {
             PanelView().environmentObject(store)

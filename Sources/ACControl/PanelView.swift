@@ -48,9 +48,9 @@ struct PanelView: View {
             Spacer()
             if store.busy { ProgressView().controlSize(.small) }
             Button { Task { await store.refresh() } } label: { Image(systemName: "arrow.clockwise") }
-                .buttonStyle(.borderless).help("Refresh")
+                .buttonStyle(.plain).foregroundStyle(.secondary).help("Refresh")
             Button { showSettings.toggle() } label: { Image(systemName: "gearshape") }
-                .buttonStyle(.borderless).help("Settings")
+                .buttonStyle(.plain).foregroundStyle(.secondary).help("Settings")
         }
     }
 
@@ -103,11 +103,13 @@ struct PanelView: View {
 
         Divider()
         HStack {
-            Toggle("Launch at login", isOn: Binding(get: { store.launchAtLogin },
-                                                    set: { store.setLaunchAtLogin($0) }))
-                .toggleStyle(.checkbox).font(.caption)
+            Button { store.setLaunchAtLogin(!store.launchAtLogin) } label: {
+                Label("Launch at login", systemImage: store.launchAtLogin ? "checkmark.square.fill" : "square")
+            }
+            .buttonStyle(.plain).font(.caption)
             Spacer()
-            Button("Quit") { NSApp.terminate(nil) }.buttonStyle(.borderless).font(.caption)
+            Button("Quit") { NSApp.terminate(nil) }
+                .buttonStyle(.plain).font(.caption).foregroundStyle(.secondary)
         }
     }
 

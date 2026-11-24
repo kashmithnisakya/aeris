@@ -51,7 +51,11 @@ final class ACStore: ObservableObject {
 
     // MARK: - Network
 
+    /// When true (README demo rendering), never touch the network.
+    var demoMode = false
+
     func refresh() async {
+        if demoMode { return }
         guard let client else { hasToken = false; return }
         hasToken = true
         if deviceId == nil {

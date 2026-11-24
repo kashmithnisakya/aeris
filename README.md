@@ -2,6 +2,18 @@
 
 A tiny macOS menu bar app for controlling a Samsung / SmartThings air conditioner.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kashmithnisakya/ac-control-mac/assets/demo.gif" alt="AC Control demo: turning the AC on, changing temperature, mode and fan from the menu bar" width="720">
+</p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kashmithnisakya/ac-control-mac/assets/panel-light.png" alt="Panel in light mode" width="280">
+  &nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/kashmithnisakya/ac-control-mac/assets/panel-dark.png" alt="Panel in dark mode" width="280">
+</p>
+
+<p align="center"><a href="https://raw.githubusercontent.com/kashmithnisakya/ac-control-mac/assets/demo.mp4">▶ Watch the demo video (MP4)</a></p>
+
 Click the AC icon in the menu bar to turn it on or off, change the temperature, mode, fan speed,
 swing and special modes (Sleep, Quiet, WindFree…). While the AC is on, the menu bar shows the
 target temperature next to the icon.
@@ -40,6 +52,11 @@ Tick **Launch at login** at the bottom of the panel to start it automatically.
 swift run                      # run a debug build
 scripts/build-app.sh 1.0.0     # build dist/AC Control.app and dist/ACControl-1.0.0.zip
 ```
+
+## Demo media
+
+Screenshots, the GIF and the video live on the [`assets`](../../tree/assets) branch so they don't bloat `main`.
+Regenerate them with `scripts/make-demo.sh` (output in `dist/demo/`) and commit them to `assets`.
 
 ## Release
 
