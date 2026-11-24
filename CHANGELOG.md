@@ -8,6 +8,11 @@ The section for each version is used as that version's GitHub release notes.
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-11-24
+
+### Fixed
+- The status line under your AC's name no longer gets cut off when the AC reports humidity.
+
 ## [1.4.0] - 2026-11-24
 
 ### Changed
@@ -90,7 +95,8 @@ First release of the menu bar app (as **AC Control**).
 - Launch at login.
 - Universal build for Apple Silicon and Intel, macOS 13 Ventura or later.
 
-[Unreleased]: https://github.com/kashmithnisakya/aeris/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/kashmithnisakya/aeris/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/kashmithnisakya/aeris/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/kashmithnisakya/aeris/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/kashmithnisakya/aeris/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/kashmithnisakya/aeris/compare/v1.2.0...v1.3.0
