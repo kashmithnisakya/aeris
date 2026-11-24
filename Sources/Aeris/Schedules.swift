@@ -100,7 +100,7 @@ extension ACStore {
     }
 
     func loadSchedules() async {
-        guard let client, let deviceId else { return }
+        guard !demoMode, let client, let deviceId else { return }
         schedulesLoading = true
         defer { schedulesLoading = false }
         do {

@@ -32,13 +32,25 @@ enum DemoRecorder {
             "custom.thermostatSetpointControl": ["minimumSetpoint": NSNumber(value: 16), "maximumSetpoint": NSNumber(value: 30)],
             "airConditionerMode": ["airConditionerMode": "cool", "supportedAcModes": ["cool", "dry", "wind", "auto", "heat"]],
             "airConditionerFanMode": ["fanMode": "auto", "supportedAcFanModes": ["auto", "low", "medium", "high", "turbo"]],
-            "fanOscillationMode": ["fanOscillationMode": "fixed", "supportedFanOscillationModes": ["fixed", "all", "vertical", "horizontal"]],
+            ACStore.airflowCap: [
+                "verticalDirection": "fixed", "verticalAngleStep": "4", "supportedVerticalAngleSteps": ["1", "2", "3", "4", "5", "6"],
+                "supportedVerticalDirections": ["swing", "fixed"],
+                "horizontalDirection": "swing", "horizontalAngleStep": "3", "supportedHorizontalAngleSteps": ["1", "2", "3", "4", "5"],
+                "supportedHorizontalDirections": ["swing", "fixed"],
+                "horizontalSwingRange": "all", "supportedHorizontalSwingRanges": ["all", "left", "right"],
+            ],
+            "samsungce.airConditionerLighting": ["lighting": "on"],
+            "samsungce.airConditionerBeep": ["beep": "off"],
+            "custom.autoCleaningMode": ["autoCleaningMode": "off"],
             "custom.airConditionerOptionalMode": ["acOptionalMode": "off", "supportedAcOptionalMode": ["off", "sleep", "quiet", "speed", "windFree"]],
         ]
         return s
     }
 
-    struct Frame { let open: Bool; let caption: String; let seconds: Double; let change: (ACStore) -> Void }
+    enum Screen { case panel, schedules }
+    struct Frame {
+        let open: Bool; var screen: Screen = .panel; let caption: String; let seconds: Double; let change: (ACStore) -> Void
+    }
 
     /// Status from a `smartthings devices:status -j` export (AC_DEMO_STATUS), to preview a real model.
     private static func statusFromFile(_ path: String) -> [String: [String: Any]]? {
@@ -90,6 +102,17 @@ enum DemoRecorder {
                 .environment(\.colorScheme, scheme)
             writePNG(render(view, scale: 2), to: dir.appendingPathComponent(name))
         }
+        store.schedules = [ACSchedule(ruleId: "r1", turnOn: true, minutes: 7 * 60, days: ["Mon", "Tue", "Wed", "Thu", "Fri"]),
+                           ACSchedule(ruleId: "r2", turnOn: false, minutes: 23 * 60 + 30, days: []),
+                           ACSchedule(ruleId: nil, turnOn: true, minutes: 18 * 60, days: ["Sat", "Sun"])]
+        store.sleepTimer = SleepTimer(ruleId: "t", fireDate: Calendar.current.date(bySettingHour: 23, minute: 0, second: 0, of: Date())!)
+        store.scheduleTimeZone = TimeZone(identifier: "Asia/Colombo")
+        for scheme in [ColorScheme.light, .dark] {
+            let view = SchedulesView(done: {}).environmentObject(store).padding(14).frame(width: 300)
+                .background(scheme == .dark ? Color(white: 0.16) : Color(white: 0.97))
+                .environment(\.colorScheme, scheme)
+            writePNG(render(view, scale: 2), to: dir.appendingPathComponent("schedules-\(scheme == .dark ? "dark" : "light").png"))
+        }
         store.status["switch"]?["switch"] = "off"
 
         let set: (String, String, Any) -> (ACStore) -> Void = { cap, attr, v in { $0.status[cap]?[attr] = v } }
@@ -113,8 +136,10 @@ enum DemoRecorder {
             Frame(open: true, caption: "Set the temperature", seconds: 1.2, change: set("thermostatCoolingSetpoint", "coolingSetpoint", NSNumber(value: 26))),
             Frame(open: true, caption: "Pick a mode", seconds: 1.3, change: set("airConditionerMode", "airConditionerMode", "dry")),
             Frame(open: true, caption: "Change fan speed", seconds: 1.3, change: set("airConditionerFanMode", "fanMode", "high")),
-            Frame(open: true, caption: "Swing and special modes", seconds: 1.1, change: set("fanOscillationMode", "fanOscillationMode", "all")),
-            Frame(open: true, caption: "Swing and special modes", seconds: 1.3, change: set("custom.airConditionerOptionalMode", "acOptionalMode", "windFree")),
+            Frame(open: true, caption: "Aim the airflow up or down", seconds: 1.3, change: set(ACStore.airflowCap, "verticalAngleStep", "2")),
+            Frame(open: true, caption: "Or let it swing left and right", seconds: 1.3, change: set(ACStore.airflowCap, "horizontalSwingRange", "left")),
+            Frame(open: true, caption: "Special modes like Sleep and Quiet", seconds: 1.2, change: set("custom.airConditionerOptionalMode", "acOptionalMode", "sleep")),
+            Frame(open: true, screen: .schedules, caption: "Schedules and a sleep timer", seconds: 2.2) { _ in },
             Frame(open: false, caption: "The menu bar shows the target while it's on", seconds: 2.0) { _ in },
             Frame(open: true, caption: "One click to turn it off", seconds: 1.8, change: set("switch", "switch", "off")),
         ]
@@ -122,7 +147,7 @@ enum DemoRecorder {
         var images: [(CGImage, Double)] = []
         for (i, f) in frames.enumerated() {
             f.change(store)
-            let img = render(Scene(store: store, open: f.open, caption: f.caption), scale: 1.5)
+            let img = render(Scene(store: store, open: f.open, screen: f.screen, caption: f.caption), scale: 1.5)
             writePNG(img, to: dir.appendingPathComponent(String(format: "frame-%02d.png", i)))
             images.append((img, f.seconds))
         }
@@ -138,6 +163,7 @@ enum DemoRecorder {
     struct Scene: View {
         @ObservedObject var store: ACStore
         let open: Bool
+        var screen: Screen = .panel
         let caption: String
 
         var body: some View {
@@ -149,7 +175,11 @@ enum DemoRecorder {
                     HStack(alignment: .top) {
                         Spacer()
                         if open {
-                            PanelView().environmentObject(store)
+                            Group {
+                                if screen == .schedules { SchedulesView(done: {}).padding(14).frame(width: 300) }
+                                else { PanelView() }
+                            }
+                            .environmentObject(store)
                                 .background(Color(white: 0.14).opacity(0.97))
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.12)))
@@ -170,7 +200,7 @@ enum DemoRecorder {
                         .padding(.bottom, 22)
                 }
             }
-            .frame(width: 760, height: 640)
+            .frame(width: 760, height: 740)
             .environment(\.colorScheme, .dark)
         }
 
