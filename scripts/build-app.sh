@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds a universal (Apple Silicon + Intel) ACControl.app and a zip for release.
+# Builds a universal (Apple Silicon + Intel) Aeris.app and a zip for release.
 # Usage: scripts/build-app.sh [version]
 set -euo pipefail
 
@@ -7,7 +7,7 @@ VERSION="${1:-0.0.0-dev}"
 VERSION="${VERSION#v}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST="$ROOT/dist"
-APP="$DIST/AC Control.app"
+APP="$DIST/Aeris.app"
 
 cd "$ROOT"
 rm -rf "$DIST"
@@ -15,18 +15,18 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 echo "==> Building $VERSION (arm64 + x86_64)"
 swift build -c release --arch arm64 --arch x86_64
-BIN="$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)/ACControl"
-cp "$BIN" "$APP/Contents/MacOS/ACControl"
+BIN="$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)/Aeris"
+cp "$BIN" "$APP/Contents/MacOS/Aeris"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>CFBundleName</key><string>AC Control</string>
-  <key>CFBundleDisplayName</key><string>AC Control</string>
-  <key>CFBundleIdentifier</key><string>com.accontrol.menubar</string>
-  <key>CFBundleExecutable</key><string>ACControl</string>
+  <key>CFBundleName</key><string>Aeris</string>
+  <key>CFBundleDisplayName</key><string>Aeris</string>
+  <key>CFBundleIdentifier</key><string>com.kashmithnisakya.aeris</string>
+  <key>CFBundleExecutable</key><string>Aeris</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundleVersion</key><string>$VERSION</string>
@@ -53,5 +53,5 @@ echo "==> Ad-hoc signing"
 codesign --force --deep --sign - "$APP"
 
 echo "==> Zipping"
-(cd "$DIST" && ditto -c -k --keepParent "AC Control.app" "ACControl-$VERSION.zip")
-echo "Done: $DIST/ACControl-$VERSION.zip"
+(cd "$DIST" && ditto -c -k --keepParent "Aeris.app" "Aeris-$VERSION.zip")
+echo "Done: $DIST/Aeris-$VERSION.zip"

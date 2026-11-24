@@ -14,7 +14,7 @@ struct STDevice: Identifiable, Hashable {
 /// Minimal SmartThings REST client. Status payloads are kept as loose JSON
 /// because every AC model reports a slightly different set of capabilities.
 struct SmartThingsClient {
-    var baseURL = URL(string: ProcessInfo.processInfo.environment["AC_CONTROL_API"]
+    var baseURL = URL(string: ProcessInfo.processInfo.environment["AERIS_API"]
                       ?? "https://api.smartthings.com/v1")!
     let token: String
 

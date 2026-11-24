@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct ACControlApp: App {
+struct AerisApp: App {
     @StateObject private var store = ACStore()
 
     init() {
