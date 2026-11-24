@@ -310,14 +310,6 @@ final class AuthManager: ObservableObject {
     }
 }
 
-/// Receives aeris:// URLs from the sign-in callback page.
-final class AppDelegate: NSObject, NSApplicationDelegate {
-    func application(_ application: NSApplication, open urls: [URL]) {
-        for url in urls {
-            Task { @MainActor in await AuthManager.shared.handleCallback(url) }
-        }
-    }
-}
 
 #if DEBUG
 /// Test hook: AERIS_TEST_SIGNIN=1 starts sign-in at launch and follows the authorize redirect itself

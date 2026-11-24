@@ -1,24 +1,46 @@
 import SwiftUI
 
+/// Aeris is a pure menu bar app: no SwiftUI `App`/`Scene`, so macOS never opens a stray window
+/// when the app activates to show its panel.
 @main
-struct AerisApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var store = ACStore()
+enum AerisMain {
+    @MainActor private static let delegate = AppDelegate()
 
-    init() {
+    @MainActor static func main() {
+        let app = NSApplication.shared
+        app.setActivationPolicy(.accessory)
+        app.delegate = delegate
         #if DEBUG
         DemoRecorder.startIfRequested()
         SignInTestHook.startIfRequested()
         #endif
+        app.run()
+    }
+}
+
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    private var store: ACStore?
+    private var statusPanel: StatusPanelController?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        if ProcessInfo.processInfo.environment["AC_DEMO_OUT"] != nil { return }   // demo rendering only
+        let store = ACStore()
+        self.store = store
+        statusPanel = StatusPanelController(store: store)
     }
 
-    var body: some Scene {
-        MenuBarExtra {
-            PanelView().environmentObject(store)
-        } label: {
-            MenuBarLabel().environmentObject(store)
+    /// Clicking the app in Finder/Spotlight while it runs opens the panel instead of a window.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        statusPanel?.openFromReopen()
+        return false
+    }
+
+    /// Receives aeris:// URLs from the sign-in callback page.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls {
+            Task { @MainActor in await AuthManager.shared.handleCallback(url) }
         }
-        .menuBarExtraStyle(.window)
     }
 }
 

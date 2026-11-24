@@ -11,7 +11,8 @@ through the SmartThings REST API (`https://api.smartthings.com/v1`). No third-pa
 
 | Path | Purpose |
 | --- | --- |
-| `Sources/Aeris/AerisApp.swift` | App entry point, menu bar label |
+| `Sources/Aeris/AerisApp.swift` | Plain AppKit entry point (`AerisMain`), `AppDelegate` (URL callbacks, reopen) |
+| `Sources/Aeris/StatusPanel.swift` | Status item + borderless drop-down panel sized to the SwiftUI content |
 | `Sources/Aeris/PanelView.swift` | Main panel (header, hero, climate, airflow, switches) and shared building blocks (`Card`, `SegmentedControl`, `MiniSwitch`, …) |
 | `Sources/Aeris/SettingsView.swift` | Settings screen; `ScreenHeader`, `SettingsRow`, `ExpandRow`, button styles |
 | `Sources/Aeris/ACStore.swift` | `@MainActor` state: polling, commands, debounced setpoint, launch-at-login |
@@ -59,6 +60,11 @@ Test env vars: `AERIS_ST_CLI` and `AERIS_ST_CREDENTIALS` (fake CLI and credentia
 `AERIS_POLL_SECONDS`, and in debug builds `AERIS_TEST_SIGNIN=1`.
 
 ## Conventions
+
+- Don't use SwiftUI `App`/`MenuBarExtra`: `MenuBarExtra(.window)` never shrinks, and any `Scene`
+  (even `Settings { EmptyView() }`) shows a stray window when the app activates. The panel is an
+  `NSPanel` whose height comes from the measured SwiftUI size (`SizeReader`); the hosting view uses
+  frame layout with `sizingOptions = []`.
 
 - Keep it dependency-free and targeting macOS 13+.
 - Controls are data-driven: only show a capability if it appears in the device status and is not

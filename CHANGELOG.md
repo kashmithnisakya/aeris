@@ -8,6 +8,17 @@ The section for each version is used as that version's GitHub release notes.
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-11-24
+
+### Fixed
+- The panel now always fits its screen exactly: Schedules and Settings no longer float with empty
+  space around them, and the dashboard is no longer cut off at the top after going back.
+- An empty "Aeris Settings" window no longer appears behind the panel.
+
+### Changed
+- Aeris draws its own menu bar panel (frosted, rounded, pinned under the icon). Click the icon or
+  anywhere else to close it; Esc goes back, then closes. Opening Aeris from Spotlight shows the panel.
+
 ## [1.4.2] - 2026-11-24
 
 ### Fixed
@@ -101,7 +112,8 @@ First release of the menu bar app (as **AC Control**).
 - Launch at login.
 - Universal build for Apple Silicon and Intel, macOS 13 Ventura or later.
 
-[Unreleased]: https://github.com/kashmithnisakya/aeris/compare/v1.4.2...HEAD
+[Unreleased]: https://github.com/kashmithnisakya/aeris/compare/v1.4.3...HEAD
+[1.4.3]: https://github.com/kashmithnisakya/aeris/compare/v1.4.2...v1.4.3
 [1.4.2]: https://github.com/kashmithnisakya/aeris/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/kashmithnisakya/aeris/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/kashmithnisakya/aeris/compare/v1.3.1...v1.4.0
