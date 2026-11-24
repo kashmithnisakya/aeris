@@ -8,6 +8,10 @@ The section for each version is used as that version's GitHub release notes.
 
 ## [Unreleased]
 
+### Fixed
+- The **Sign in with SmartThings** button looked greyed out even though it worked.
+- "Finish signing in in your browser" now shows a browser icon instead of a spinner.
+
 ## [1.2.0] - 2026-11-24
 
 ### Added
