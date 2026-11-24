@@ -150,18 +150,16 @@ struct PanelView: View {
             let swinging = store.airflowSwinging(axis)
             VStack(alignment: .leading, spacing: 3) {
                 Text(title).font(.caption2).foregroundStyle(.secondary)
-                HStack(spacing: 4) {
+                HStack(spacing: 8) {
                     if store.airflowCanSwing(axis) {
                         chip("Swing", selected: swinging) { store.setAirflowSwing(axis) }
-                            .padding(.trailing, 4)
                     }
-                    Image(systemName: start).font(.caption2).foregroundStyle(.secondary)
-                    ForEach(steps, id: \.self) { step in
-                        chip(step, selected: !swinging && step == store.airflowStep(axis), compact: true) {
+                    if !steps.isEmpty {
+                        StepSlider(steps: steps, selected: store.airflowStep(axis), active: !swinging,
+                                   startIcon: start, endIcon: end, label: "\(title) angle") { step in
                             store.setAirflowAngle(axis, step: step)
                         }
                     }
-                    Image(systemName: end).font(.caption2).foregroundStyle(.secondary)
                 }
             }
         }

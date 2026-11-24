@@ -17,6 +17,7 @@ through the SmartThings REST API (`https://api.smartthings.com/v1`). No third-pa
 | `Sources/Aeris/SmartThingsClient.swift` | Thin REST client; status kept as loose JSON |
 | `Sources/Aeris/Auth.swift` | Sign-in state, token renewal; own-app OAuth code flow and `aeris://` callback |
 | `Sources/Aeris/SmartThingsCLI.swift` | Default sign-in: reads the SmartThings CLI's token, runs the CLI to renew it |
+| `Sources/Aeris/StepSlider.swift` | Snapping slider for discrete steps (airflow angles); commits on release |
 | `Sources/Aeris/Schedules.swift` | On/off schedules and "turn off in" timer as SmartThings Rules |
 | `Sources/Aeris/SchedulesView.swift` | Schedules screen (clock button in the panel header) |
 | `Sources/Aeris/Keychain.swift` | Credentials storage in the login Keychain |
