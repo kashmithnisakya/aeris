@@ -1,19 +1,32 @@
 import SwiftUI
 
+// MARK: - Labels and icons
+
 private let labels: [String: String] = [
     "cool": "Cool", "heat": "Heat", "dry": "Dry", "wind": "Fan", "fan": "Fan", "auto": "Auto", "aIComfort": "AI",
     "low": "Low", "medium": "Med", "high": "High", "turbo": "Turbo",
-    "fixed": "Off", "all": "All", "vertical": "Up/Down", "horizontal": "Left/Right",
+    "fixed": "Off", "all": "All", "vertical": "Up/Down", "horizontal": "Left/Right", "left": "Left", "right": "Right",
     "off": "Off", "sleep": "Sleep", "quiet": "Quiet", "smart": "Smart", "speed": "Speed", "windFree": "WindFree",
-    "windFreeSleep": "WF Sleep", "longWind": "Long wind", "comfort": "Comfort", "twoStep": "2-step",
-    "energySaving": "Eco",
+    "windFreeSleep": "WF Sleep", "longWind": "Long", "comfort": "Comfort", "twoStep": "2-step", "energySaving": "Eco",
 ]
 
-private func pretty(_ v: String) -> String {
+func pretty(_ v: String) -> String {
     if let l = labels[v] { return l }
     let spaced = v.replacingOccurrences(of: "([a-z])([A-Z])", with: "$1 $2", options: .regularExpression)
     return spaced.prefix(1).uppercased() + spaced.dropFirst()
 }
+
+private let modeIcons: [String: String] = [
+    "cool": "snowflake", "dry": "drop", "wind": "fan", "fan": "fan", "auto": "arrow.triangle.2.circlepath",
+    "heat": "flame", "aIComfort": "sparkles",
+]
+
+private let modeVerbs: [String: String] = [
+    "cool": "Cooling", "dry": "Drying", "wind": "Fan only", "fan": "Fan only", "auto": "Auto", "heat": "Heating",
+    "aIComfort": "AI comfort",
+]
+
+// MARK: - Panel
 
 struct PanelView: View {
     @EnvironmentObject var store: ACStore
@@ -21,8 +34,9 @@ struct PanelView: View {
     @State private var showSchedules = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             header
+            if let err = store.error { ErrorBanner(text: err) }
             if !store.hasToken || showSettings {
                 SettingsView(done: { showSettings = false })
             } else if showSchedules {
@@ -30,113 +44,219 @@ struct PanelView: View {
             } else {
                 controls
             }
-            if let err = store.error {
-                Label(err, systemImage: "exclamationmark.triangle.fill")
-                    .font(.caption).foregroundStyle(.red)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
         }
-        .padding(14)
-        .frame(width: 300)
+        .padding(12)
+        .frame(width: 320)
         .task { await store.refresh() }
+        .animation(.snappy(duration: 0.25), value: store.isOn)
+    }
+
+    // MARK: Header
+
+    private var statusLine: String {
+        guard store.hasToken else { return "Not signed in" }
+        if store.online == false { return "Offline" }
+        var parts: [String] = []
+        if store.isOn {
+            let mode: String? = store.value("airConditionerMode", "airConditionerMode")
+            let verb = mode.flatMap { modeVerbs[$0] } ?? "On"
+            if let sp = store.setpoint { parts.append("\(verb) to \(formatTemp(sp))°") } else { parts.append(verb) }
+        } else {
+            parts.append("Off")
+        }
+        if let t = store.roomTemp { parts.append("Room \(formatTemp(t))°") }
+        if let h = store.humidity { parts.append("\(Int(h))%") }
+        return parts.joined(separator: " · ")
     }
 
     private var header: some View {
-        HStack(spacing: 8) {
-            Circle()
-                .fill(store.online == true ? Color.green : Color.secondary.opacity(0.5))
-                .frame(width: 8, height: 8)
-                .help(store.online == true ? "Online" : "Offline or unknown")
-            Text(store.deviceName).font(.headline).lineLimit(1)
-            Spacer()
-            if store.busy { ProgressView().controlSize(.small) }
-            Button { Task { await store.refresh() } } label: { Image(systemName: "arrow.clockwise") }
-                .buttonStyle(.plain).foregroundStyle(.secondary).help("Refresh")
-            if store.hasToken {
-                Button { showSchedules.toggle(); showSettings = false } label: {
-                    Image(systemName: store.sleepTimer != nil || store.schedules.contains(where: \.enabled) ? "clock.fill" : "clock")
-                }
-                .buttonStyle(.plain).foregroundStyle(.secondary).help("Schedules and timer")
+        HStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(store.isOn ? AnyShapeStyle(Color.accentColor.gradient) : AnyShapeStyle(Color.secondary.opacity(0.18)))
+                Image(systemName: "air.conditioner.horizontal.fill")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(store.isOn ? Color.white : Color.secondary)
             }
-            Button { showSettings.toggle(); showSchedules = false } label: { Image(systemName: "gearshape") }
-                .buttonStyle(.plain).foregroundStyle(.secondary).help("Settings")
+            .frame(width: 34, height: 34)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(store.deviceName).font(.system(size: 13, weight: .semibold)).lineLimit(1)
+                HStack(spacing: 4) {
+                    if store.online == false {
+                        Circle().fill(Color.orange).frame(width: 6, height: 6)
+                    }
+                    Text(statusLine)
+                        .font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
+                        .contentTransition(.numericText())
+                }
+            }
+            Spacer(minLength: 4)
+            if store.busy { ProgressView().controlSize(.mini) }
+            if store.hasToken {
+                CircleIconButton(icon: store.sleepTimer != nil || store.schedules.contains(where: \.enabled) ? "clock.fill" : "clock",
+                                 active: showSchedules, help: "Schedules and timer") {
+                    showSchedules.toggle(); showSettings = false
+                }
+            }
+            CircleIconButton(icon: "gearshape.fill", active: showSettings, help: "Settings") {
+                showSettings.toggle(); showSchedules = false
+            }
         }
+        .padding(.horizontal, 2)
     }
+
+    // MARK: Controls
 
     @ViewBuilder private var controls: some View {
-        // Power
-        Button(action: store.togglePower) {
-            HStack {
-                Image(systemName: "power")
-                Text(store.isOn ? "On" : "Off").fontWeight(.semibold)
-                Spacer()
-                if let t = store.roomTemp { Text("Room \(formatTemp(t))°").foregroundStyle(.secondary) }
-                if let h = store.humidity { Text("\(Int(h))%").foregroundStyle(.secondary) }
-            }
-            .padding(.horizontal, 12).padding(.vertical, 10)
-            .frame(maxWidth: .infinity)
-            .background(store.isOn ? Color.accentColor.opacity(0.9) : Color.secondary.opacity(0.15),
-                        in: RoundedRectangle(cornerRadius: 10))
-            .foregroundStyle(store.isOn ? Color.white : Color.primary)
-        }
-        .buttonStyle(.plain)
-        .keyboardShortcut(.space, modifiers: [])
-
+        heroCard
         Group {
-            if store.has("thermostatCoolingSetpoint") {
-                HStack {
-                    stepButton("minus") { store.nudgeSetpoint(-1) }
-                    Spacer()
-                    VStack(spacing: 0) {
-                        Text(store.setpoint.map { "\(formatTemp($0))°" } ?? "--")
-                            .font(.system(size: 40, weight: .light)).monospacedDigit()
-                        Text("Target").font(.caption).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    stepButton("plus") { store.nudgeSetpoint(1) }
-                }
-                .padding(.horizontal, 8)
-            }
-
-            chipRow("Mode", cap: "airConditionerMode", current: "airConditionerMode",
-                    list: "supportedAcModes", command: "setAirConditionerMode")
-            chipRow("Fan", cap: "airConditionerFanMode", current: "fanMode",
-                    list: "supportedAcFanModes", command: "setFanMode")
-            chipRow("Swing", cap: "fanOscillationMode", current: "fanOscillationMode",
-                    list: "supportedFanOscillationModes", command: "setFanOscillationMode")
-            chipRow("Special", cap: "custom.airConditionerOptionalMode", current: "acOptionalMode",
-                    list: "supportedAcOptionalMode", command: "setAcOptionalMode")
-            if store.hasAirflow { airflow }
+            climateCard
+            if store.hasAirflow { AirflowCard() }
         }
         .disabled(!store.isOn)
-        .opacity(store.isOn ? 1 : 0.45)
+        .opacity(store.isOn ? 1 : 0.5)
+        .saturation(store.isOn ? 1 : 0)
+        if !store.availableSwitches.isEmpty { switchesCard }
+    }
 
-        if !store.availableSwitches.isEmpty { featureSwitches }
+    private var heroCard: some View {
+        Card {
+            HStack(spacing: 12) {
+                Button(action: store.togglePower) {
+                    ZStack {
+                        Circle()
+                            .fill(store.isOn ? AnyShapeStyle(Color.accentColor.gradient) : AnyShapeStyle(Color.secondary.opacity(0.18)))
+                        Image(systemName: "power")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(store.isOn ? Color.white : Color.primary)
+                    }
+                    .frame(width: 52, height: 52)
+                    .shadow(color: store.isOn ? Color.accentColor.opacity(0.35) : .clear, radius: 8, y: 3)
+                }
+                .buttonStyle(PressableStyle())
+                .keyboardShortcut(.space, modifiers: [])
+                .help(store.isOn ? "Turn off" : "Turn on")
+                .accessibilityLabel(store.isOn ? "Turn off" : "Turn on")
 
-        Divider()
-        HStack {
-            Button { store.setLaunchAtLogin(!store.launchAtLogin) } label: {
-                Label("Launch at login", systemImage: store.launchAtLogin ? "checkmark.square.fill" : "square")
+                Spacer(minLength: 0)
+
+                if store.has("thermostatCoolingSetpoint") {
+                    let canDown = (store.setpoint ?? 0) > store.setpointRange.lowerBound
+                    let canUp = (store.setpoint ?? 0) < store.setpointRange.upperBound
+                    StepCircle(icon: "minus", enabled: store.isOn && canDown) { store.nudgeSetpoint(-1) }
+                    VStack(spacing: -2) {
+                        Text(store.setpoint.map { formatTemp($0) } ?? "--")
+                            .font(.system(size: 44, weight: .light, design: .rounded))
+                            .monospacedDigit()
+                            .contentTransition(.numericText())
+                            .animation(.snappy, value: store.setpoint)
+                            .overlay(alignment: .topTrailing) {
+                                Text("°").font(.system(size: 22, weight: .light, design: .rounded)).offset(x: 12, y: 4)
+                            }
+                        Text("TARGET").font(.system(size: 9, weight: .semibold)).tracking(0.8).foregroundStyle(.secondary)
+                    }
+                    .frame(minWidth: 70)
+                    .opacity(store.isOn ? 1 : 0.5)
+                    StepCircle(icon: "plus", enabled: store.isOn && canUp) { store.nudgeSetpoint(1) }
+                }
             }
-            .buttonStyle(.plain).font(.caption)
-            Spacer()
-            Button("Quit") { NSApp.terminate(nil) }
-                .buttonStyle(.plain).font(.caption).foregroundStyle(.secondary)
         }
     }
 
-    // MARK: Airflow
+    private var climateCard: some View {
+        Card(spacing: 12) {
+            let modes: [String] = store.has("airConditionerMode") ? (store.value("airConditionerMode", "supportedAcModes") ?? []) : []
+            if !modes.isEmpty {
+                let current: String? = store.value("airConditionerMode", "airConditionerMode")
+                HStack(spacing: 6) {
+                    ForEach(modes, id: \.self) { m in
+                        ModeTile(icon: modeIcons[m] ?? "circle", title: pretty(m), selected: m == current) {
+                            store.send("airConditionerMode", "setAirConditionerMode", [m], optimistic: ("airConditionerMode", m))
+                        }
+                    }
+                }
+            }
+            segmentedRow("Fan speed", cap: "airConditionerFanMode", current: "fanMode",
+                         list: "supportedAcFanModes", command: "setFanMode")
+            segmentedRow("Swing", cap: "fanOscillationMode", current: "fanOscillationMode",
+                         list: "supportedFanOscillationModes", command: "setFanOscillationMode")
+            segmentedRow("Special mode", cap: "custom.airConditionerOptionalMode", current: "acOptionalMode",
+                         list: "supportedAcOptionalMode", command: "setAcOptionalMode")
+        }
+    }
 
-    @ViewBuilder private var airflow: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text("Airflow").font(.caption).foregroundStyle(.secondary)
-            axisRow(.vertical, title: "Up / Down", start: "arrow.up", end: "arrow.down")
-            axisRow(.horizontal, title: "Left / Right", start: "arrow.left", end: "arrow.right")
-            if store.airflowSwinging(.horizontal), store.swingRanges.count > 1 {
-                HStack(spacing: 5) {
-                    Text("Swing range").font(.caption2).foregroundStyle(.secondary)
-                    ForEach(store.swingRanges, id: \.self) { r in
-                        chip(pretty(r), selected: r == store.swingRange) { store.setSwingRange(r) }
+    @ViewBuilder
+    private func segmentedRow(_ title: String, cap: String, current: String, list: String, command: String) -> some View {
+        if store.has(cap), let options: [String] = store.value(cap, list), !options.isEmpty {
+            VStack(alignment: .leading, spacing: 5) {
+                SectionLabel(title)
+                SegmentedControl(options: options, selected: store.value(cap, current), label: pretty) { v in
+                    store.send(cap, command, [v], optimistic: (current, v))
+                }
+            }
+        }
+    }
+
+    private var switchesCard: some View {
+        Card(spacing: 0) {
+            ForEach(Array(store.availableSwitches.enumerated()), id: \.element.id) { i, sw in
+                if i > 0 { Divider().padding(.leading, 34) }
+                HStack(spacing: 10) {
+                    Image(systemName: sw.icon)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(store.isSwitchOn(sw) ? Color.accentColor : Color.secondary)
+                        .frame(width: 24, height: 24)
+                        .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    Text(sw.name).font(.system(size: 13))
+                    Spacer()
+                    MiniSwitch(isOn: store.isSwitchOn(sw)) { store.toggle(sw) }
+                        .accessibilityLabel(sw.name)
+                }
+                .padding(.vertical, 6)
+            }
+        }
+    }
+}
+
+// MARK: - Airflow
+
+private struct AirflowCard: View {
+    @EnvironmentObject var store: ACStore
+    @AppStorage("airflowExpanded") private var expanded = false
+
+    private func summary(_ a: ACStore.Axis) -> String {
+        store.airflowSwinging(a) ? "Swing" : (store.airflowStep(a).map { "Angle \($0)" } ?? "–")
+    }
+
+    var body: some View {
+        Card(spacing: 10) {
+            Button { withAnimation(.snappy(duration: 0.25)) { expanded.toggle() } } label: {
+                HStack {
+                    SectionLabel("Airflow")
+                    Spacer()
+                    if !expanded {
+                        Text("↕ \(summary(.vertical))   ↔ \(summary(.horizontal))")
+                            .font(.system(size: 11)).foregroundStyle(.secondary)
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .bold)).foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(expanded ? 90 : 0))
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(expanded ? "Hide airflow controls" : "Show airflow controls")
+
+            if expanded {
+                axisRow(.vertical, title: "Up/Down", start: "arrow.up", end: "arrow.down")
+                axisRow(.horizontal, title: "Left/Right", start: "arrow.left", end: "arrow.right")
+                if store.airflowSwinging(.horizontal), store.swingRanges.count > 1 {
+                    HStack(spacing: 8) {
+                        Text("Range").font(.system(size: 11)).foregroundStyle(.secondary).frame(width: 62, alignment: .leading)
+                        SegmentedControl(options: store.swingRanges, selected: store.swingRange, label: pretty) {
+                            store.setSwingRange($0)
+                        }
                     }
                 }
             }
@@ -148,81 +268,15 @@ struct PanelView: View {
         let steps = store.airflowSteps(axis)
         if !steps.isEmpty || store.airflowCanSwing(axis) {
             let swinging = store.airflowSwinging(axis)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.caption2).foregroundStyle(.secondary)
-                HStack(spacing: 8) {
-                    if store.airflowCanSwing(axis) {
-                        chip("Swing", selected: swinging) { store.setAirflowSwing(axis) }
-                    }
-                    if !steps.isEmpty {
-                        StepSlider(steps: steps, selected: store.airflowStep(axis), active: !swinging,
-                                   startIcon: start, endIcon: end, label: "\(title) angle") { step in
-                            store.setAirflowAngle(axis, step: step)
-                        }
-                    }
+            HStack(spacing: 8) {
+                Text(title).font(.system(size: 11)).foregroundStyle(.secondary).frame(width: 62, alignment: .leading)
+                if store.airflowCanSwing(axis) {
+                    PillToggle(title: "Swing", icon: "wave.3.right", isOn: swinging) { store.setAirflowSwing(axis) }
                 }
-            }
-        }
-    }
-
-    // MARK: Feature switches
-
-    private var featureSwitches: some View {
-        FlowLayout(spacing: 5) {
-            ForEach(store.availableSwitches) { sw in
-                let on = store.isSwitchOn(sw)
-                Button { store.toggle(sw) } label: {
-                    Label(sw.name, systemImage: on ? sw.icon + ".fill" : sw.icon)
-                        .font(.caption)
-                        .padding(.horizontal, 9).padding(.vertical, 5)
-                        .background(on ? Color.accentColor.opacity(0.18) : Color.secondary.opacity(0.12),
-                                    in: Capsule())
-                        .overlay(Capsule().stroke(on ? Color.accentColor : .clear, lineWidth: 1))
-                        .foregroundStyle(on ? Color.accentColor : Color.primary)
-                }
-                .buttonStyle(.plain)
-                .help("\(sw.name): \(on ? "on" : "off")")
-            }
-        }
-    }
-
-    private func chip(_ title: String, selected: Bool, compact: Bool = false, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.callout).monospacedDigit()
-                .padding(.horizontal, compact ? 0 : 9).padding(.vertical, 4)
-                .frame(minWidth: compact ? 26 : nil)
-                .background(selected ? Color.accentColor : Color.secondary.opacity(0.15), in: Capsule())
-                .foregroundStyle(selected ? Color.white : Color.primary)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func stepButton(_ icon: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: icon).font(.title3).frame(width: 36, height: 36)
-                .background(Color.secondary.opacity(0.15), in: Circle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    @ViewBuilder
-    private func chipRow(_ title: String, cap: String, current: String, list: String, command: String) -> some View {
-        if store.has(cap), let options: [String] = store.value(cap, list), !options.isEmpty {
-            let selected: String? = store.value(cap, current)
-            VStack(alignment: .leading, spacing: 5) {
-                Text(title).font(.caption).foregroundStyle(.secondary)
-                FlowLayout(spacing: 5) {
-                    ForEach(options, id: \.self) { opt in
-                        Button(pretty(opt)) {
-                            store.send(cap, command, [opt], optimistic: (current, opt))
-                        }
-                        .buttonStyle(.plain)
-                        .font(.callout)
-                        .padding(.horizontal, 9).padding(.vertical, 4)
-                        .background(opt == selected ? Color.accentColor : Color.secondary.opacity(0.15),
-                                    in: Capsule())
-                        .foregroundStyle(opt == selected ? Color.white : Color.primary)
+                if !steps.isEmpty {
+                    StepSlider(steps: steps, selected: store.airflowStep(axis), active: !swinging,
+                               startIcon: start, endIcon: end, label: "\(title) angle") { step in
+                        store.setAirflowAngle(axis, step: step)
                     }
                 }
             }
@@ -230,198 +284,193 @@ struct PanelView: View {
     }
 }
 
-struct SettingsView: View {
-    @EnvironmentObject var store: ACStore
-    @ObservedObject private var auth = AuthManager.shared
-    var done: () -> Void
-    @State private var token = ""
-    @State private var clientID = ""
-    @State private var clientSecret = ""
-    @State private var showClient = false
-    @State private var showToken = false
+// MARK: - Building blocks
+
+/// A rounded, softly filled container like a Control Center module.
+struct Card<Content: View>: View {
+    var spacing: CGFloat = 8
+    @ViewBuilder var content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("SmartThings account").font(.subheadline.weight(.semibold))
-            account
-
-            if let err = auth.lastError {
-                Label(err, systemImage: "exclamationmark.triangle.fill")
-                    .font(.caption).foregroundStyle(.red)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            if !auth.hasBuiltInClient { ownApp }
-            advancedToken
-
-            if store.hasToken {
-                Divider()
-                Text("Device").font(.subheadline.weight(.semibold))
-                if store.devices.isEmpty {
-                    Button("Load devices") { Task { await store.loadDevices() } }
-                } else {
-                    Picker("Device", selection: Binding(
-                        get: { store.deviceId ?? "" },
-                        set: { id in if let d = store.devices.first(where: { $0.id == id }) { store.selectDevice(d) } }
-                    )) {
-                        ForEach(store.devices) { d in Text(d.label + (d.isAC ? " ❄︎" : "")).tag(d.id) }
-                    }
-                    .labelsHidden()
-                }
-                HStack {
-                    Spacer()
-                    Button("Done", action: done).keyboardShortcut(.defaultAction)
-                }
-            }
-        }
-        .task { if store.hasToken && store.devices.isEmpty { await store.loadDevices() } }
-    }
-
-    @ViewBuilder private var account: some View {
-        if auth.signingIn {
-            HStack {
-                Image(systemName: "safari").foregroundStyle(Color.accentColor)
-                Text("Finish signing in in your browser…").font(.callout)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer()
-                Button("Cancel") { auth.cancelSignIn() }.buttonStyle(.plain).font(.caption).foregroundStyle(.secondary)
-            }
-        } else if let c = auth.credentials, c.kind != .pat {
-            HStack {
-                Label("Signed in — access renews automatically", systemImage: "checkmark.seal.fill")
-                    .font(.callout).foregroundStyle(.green)
-                Spacer()
-                Button("Sign out") { store.signOut() }.buttonStyle(.plain).font(.caption).foregroundStyle(.secondary)
-            }
-        } else {
-            if auth.credentials?.kind == .pat {
-                Text("Using a personal access token. SmartThings makes these expire after 24 hours.")
-                    .font(.caption).foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Button { auth.beginSignIn() } label: {
-                Label("Sign in with SmartThings", systemImage: "person.crop.circle.badge.checkmark")
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(auth.client == nil && !cliInstalled ? Color.secondary.opacity(0.3) : Color.accentColor,
-                                in: RoundedRectangle(cornerRadius: 9))
-                    .foregroundStyle(.white)
-            }
-            .buttonStyle(.plain)
-            .disabled(auth.client == nil && !cliInstalled)
-            if auth.client == nil && !cliInstalled { installCLI }
-        }
-    }
-
-    private var cliInstalled: Bool { SmartThingsCLI.isInstalled }
-
-    /// Shown when sign-in needs the SmartThings CLI and it isn't installed.
-    private var installCLI: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Sign-in uses SmartThings' official command-line tool. Install it once in Terminal:")
-                .font(.caption).foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            HStack {
-                Text(Self.installCommand)
-                    .font(.system(.caption, design: .monospaced))
-                    .textSelection(.enabled)
-                    .lineLimit(2)
-                Spacer()
-                Button {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(Self.installCommand, forType: .string)
-                } label: { Image(systemName: "doc.on.doc") }
-                .buttonStyle(.plain).help("Copy")
-            }
-            .padding(6)
-            .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
-            Button("I've installed it") { auth.objectWillChange.send() }
-                .buttonStyle(.plain).font(.caption).foregroundStyle(Color.accentColor)
-        }
-    }
-
-    static let installCommand = "brew install smartthingscommunity/smartthings/smartthings"
-
-    private var ownApp: some View {
-        DisclosureGroup(isExpanded: $showClient) {
-            VStack(alignment: .leading, spacing: 6) {
-                if let c = auth.customClient {
-                    HStack {
-                        Text("Client ID \(c.id.prefix(8))… saved").font(.caption).foregroundStyle(.secondary)
-                        Spacer()
-                        Button("Remove") { auth.removeCustomClient() }.buttonStyle(.plain).font(.caption)
-                    }
-                }
-                TextField("Client ID", text: $clientID).textFieldStyle(.roundedBorder)
-                SecureField("Client Secret", text: $clientSecret).textFieldStyle(.roundedBorder)
-                HStack {
-                    Link("How to create one", destination: URL(string: "https://github.com/kashmithnisakya/aeris#use-your-own-smartthings-app")!)
-                        .font(.caption)
-                    Spacer()
-                    Button("Save") {
-                        auth.saveCustomClient(id: clientID, secret: clientSecret)
-                        clientID = ""; clientSecret = ""
-                    }
-                    .disabled(clientID.isEmpty || clientSecret.isEmpty)
-                }
-            }
-            .padding(.top, 4)
-        } label: {
-            Text("Advanced: your own SmartThings app (developer plan)").font(.caption)
-        }
-    }
-
-    private var advancedToken: some View {
-        DisclosureGroup(isExpanded: $showToken) {
-            VStack(alignment: .leading, spacing: 6) {
-                SecureField("Paste personal access token", text: $token)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit(saveToken)
-                HStack {
-                    Link("Get a token", destination: URL(string: "https://account.smartthings.com/tokens")!).font(.caption)
-                    Spacer()
-                    Button("Use token", action: saveToken).disabled(token.isEmpty)
-                }
-                Text("Expires after 24 hours. Tick the Devices permissions when creating it.")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-            .padding(.top, 4)
-        } label: {
-            Text("Advanced: personal access token").font(.caption)
-        }
-    }
-
-    private func saveToken() {
-        store.saveToken(token)
-        token = ""
-        done()
+        VStack(alignment: .leading, spacing: spacing) { content }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.primary.opacity(0.06)))
     }
 }
 
-/// Simple wrapping layout for the option chips.
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 6
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.width ?? 300
-        var x: CGFloat = 0, y: CGFloat = 0, rowH: CGFloat = 0
-        for v in subviews {
-            let s = v.sizeThatFits(.unspecified)
-            if x + s.width > width, x > 0 { x = 0; y += rowH + spacing; rowH = 0 }
-            x += s.width + spacing
-            rowH = max(rowH, s.height)
-        }
-        return CGSize(width: width, height: y + rowH)
+struct SectionLabel: View {
+    let text: String
+    init(_ text: String) { self.text = text }
+    var body: some View {
+        Text(text.uppercased()).font(.system(size: 10, weight: .semibold)).tracking(0.6).foregroundStyle(.secondary)
     }
+}
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var x = bounds.minX, y = bounds.minY, rowH: CGFloat = 0
-        for v in subviews {
-            let s = v.sizeThatFits(.unspecified)
-            if x + s.width > bounds.maxX, x > bounds.minX { x = bounds.minX; y += rowH + spacing; rowH = 0 }
-            v.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(s))
-            x += s.width + spacing
-            rowH = max(rowH, s.height)
+/// Mode button: icon in a circle with a label underneath.
+private struct ModeTile: View {
+    let icon: String
+    let title: String
+    let selected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 5) {
+                ZStack {
+                    Circle().fill(selected ? AnyShapeStyle(Color.accentColor.gradient) : AnyShapeStyle(Color.primary.opacity(0.08)))
+                    Image(systemName: icon)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(selected ? Color.white : Color.primary)
+                }
+                .frame(width: 38, height: 38)
+                Text(title).font(.system(size: 10.5, weight: selected ? .semibold : .regular))
+                    .foregroundStyle(selected ? Color.primary : Color.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+/// A segmented control with a sliding selection, sized to fill the row.
+struct SegmentedControl: View {
+    let options: [String]
+    let selected: String?
+    var label: (String) -> String = { $0 }
+    let onSelect: (String) -> Void
+    @Namespace private var ns
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(options, id: \.self) { o in
+                let isSel = o == selected
+                Button { onSelect(o) } label: {
+                    Text(label(o))
+                        .font(.system(size: 11.5, weight: isSel ? .semibold : .regular))
+                        .lineLimit(1).minimumScaleFactor(0.8)
+                        .foregroundStyle(isSel ? Color.primary : Color.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 5)
+                        .background {
+                            if isSel {
+                                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                    .fill(scheme == .dark ? Color.white.opacity(0.2) : Color.white)
+                                    .shadow(color: .black.opacity(0.15), radius: 1.5, y: 1)
+                                    .matchedGeometryEffect(id: "sel", in: ns)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(isSel ? .isSelected : [])
+            }
+        }
+        .padding(2)
+        .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .animation(.snappy(duration: 0.22), value: selected)
+    }
+}
+
+/// Small on/off switch drawn in SwiftUI.
+struct MiniSwitch: View {
+    let isOn: Bool
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            Capsule()
+                .fill(isOn ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(Color.primary.opacity(0.15)))
+                .frame(width: 32, height: 19)
+                .overlay(alignment: isOn ? .trailing : .leading) {
+                    Circle().fill(.white).shadow(color: .black.opacity(0.2), radius: 1, y: 0.5)
+                        .frame(width: 15, height: 15).padding(2)
+                }
+                .animation(.snappy(duration: 0.2), value: isOn)
+        }
+        .buttonStyle(.plain)
+        .accessibilityValue(isOn ? "On" : "Off")
+    }
+}
+
+/// Compact capsule toggle with an icon (e.g. Swing).
+private struct PillToggle: View {
+    let title: String
+    let icon: String
+    let isOn: Bool
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            Label(title, systemImage: icon)
+                .font(.system(size: 11, weight: .medium))
+                .padding(.horizontal, 8).padding(.vertical, 4)
+                .background(isOn ? AnyShapeStyle(Color.accentColor.gradient) : AnyShapeStyle(Color.primary.opacity(0.08)),
+                            in: Capsule())
+                .foregroundStyle(isOn ? Color.white : Color.primary)
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityAddTraits(isOn ? .isSelected : [])
+    }
+}
+
+private struct StepCircle: View {
+    let icon: String
+    let enabled: Bool
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .semibold))
+                .frame(width: 30, height: 30)
+                .background(Color.primary.opacity(0.08), in: Circle())
+        }
+        .buttonStyle(PressableStyle())
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.35)
+        .accessibilityLabel(icon == "plus" ? "Warmer" : "Cooler")
+    }
+}
+
+struct CircleIconButton: View {
+    let icon: String
+    var active = false
+    let help: String
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(active ? Color.white : Color.secondary)
+                .frame(width: 26, height: 26)
+                .background(active ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(Color.primary.opacity(0.08)), in: Circle())
+        }
+        .buttonStyle(PressableStyle())
+        .help(help)
+        .accessibilityLabel(help)
+    }
+}
+
+private struct ErrorBanner: View {
+    let text: String
+    var body: some View {
+        Label { Text(text).fixedSize(horizontal: false, vertical: true) }
+              icon: { Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange) }
+            .font(.system(size: 11.5))
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+}
+
+/// Slight shrink on press, like system controls.
+struct PressableStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.94 : 1)
+            .animation(.snappy(duration: 0.15), value: configuration.isPressed)
     }
 }
