@@ -5,16 +5,16 @@
 Aeris is a tiny macOS menu bar app for controlling a Samsung / SmartThings air conditioner.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kashmithnisakya/aeris-ac/assets/demo.gif" alt="Aeris demo: turning the AC on, changing temperature, mode and fan from the menu bar" width="720">
+  <img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/demo.gif" alt="Aeris demo: turning the AC on, changing temperature, mode and fan from the menu bar" width="720">
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kashmithnisakya/aeris-ac/assets/panel-light.png" alt="Panel in light mode" width="280">
+  <img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/panel-light.png" alt="Panel in light mode" width="280">
   &nbsp;&nbsp;
-  <img src="https://raw.githubusercontent.com/kashmithnisakya/aeris-ac/assets/panel-dark.png" alt="Panel in dark mode" width="280">
+  <img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/panel-dark.png" alt="Panel in dark mode" width="280">
 </p>
 
-<p align="center"><a href="https://raw.githubusercontent.com/kashmithnisakya/aeris-ac/assets/demo.mp4">▶ Watch the demo video (MP4)</a></p>
+<p align="center"><a href="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/demo.mp4">▶ Watch the demo video (MP4)</a></p>
 
 Click the AC icon in the menu bar to turn it on or off, change the temperature, mode, fan speed,
 swing and special modes (Sleep, Quiet, WindFree…). While the AC is on, the menu bar shows the

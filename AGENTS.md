@@ -48,6 +48,6 @@ Test without touching a real AC by pointing the app at a mock server:
 
 - `main` is protected: open a pull request, don't push directly.
 - Screenshots and videos live on the orphan `assets` branch, not on `main`. Reference them with
-  `https://raw.githubusercontent.com/kashmithnisakya/aeris-ac/assets/<file>`.
+  `https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/<file>`.
 - Release by pushing a tag: `git tag v1.2.3 && git push origin v1.2.3`.
 - Don't add AI co-author trailers to commits or PRs.
