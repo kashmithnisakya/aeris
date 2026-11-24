@@ -86,9 +86,19 @@ enum DemoRecorder {
                                ACSchedule(ruleId: nil, turnOn: true, minutes: 18 * 60, days: ["Sat", "Sun"])]
             store.sleepTimer = SleepTimer(ruleId: "t", fireDate: Date().addingTimeInterval(3600))
             store.scheduleTimeZone = TimeZone(identifier: "Asia/Colombo")
-            let sched = SchedulesView(done: {}).environmentObject(store).padding(14).frame(width: 300)
+            let sched = SchedulesView(done: {}).environmentObject(store).padding(12).frame(width: 320)
                 .background(Color(white: 0.16)).environment(\.colorScheme, .dark)
             writePNG(render(sched, scale: 2), to: dir.appendingPathComponent("real-schedules.png"))
+            AuthManager.shared.setDemoState(credentials: Credentials(kind: .cli, accessToken: ""), signingIn: false)
+            store.hasToken = true
+            store.deviceId = "demo"
+            store.devices = [STDevice(id: "demo", label: "Living room AC", isAC: true),
+                             STDevice(id: "demo2", label: "Bedroom AC", isAC: true)]
+            for scheme in [ColorScheme.light, .dark] {
+                let settings = SettingsView(done: {}).environmentObject(store).padding(12).frame(width: 320)
+                    .background(scheme == .dark ? Color(white: 0.16) : Color(white: 0.97)).environment(\.colorScheme, scheme)
+                writePNG(render(settings, scale: 2), to: dir.appendingPathComponent("real-settings-\(scheme == .dark ? "dark" : "light").png"))
+            }
             return
         }
         try? await Task.sleep(nanoseconds: 300_000_000)
@@ -108,7 +118,7 @@ enum DemoRecorder {
         store.sleepTimer = SleepTimer(ruleId: "t", fireDate: Calendar.current.date(bySettingHour: 23, minute: 0, second: 0, of: Date())!)
         store.scheduleTimeZone = TimeZone(identifier: "Asia/Colombo")
         for scheme in [ColorScheme.light, .dark] {
-            let view = SchedulesView(done: {}).environmentObject(store).padding(14).frame(width: 300)
+            let view = SchedulesView(done: {}).environmentObject(store).padding(12).frame(width: 320)
                 .background(scheme == .dark ? Color(white: 0.16) : Color(white: 0.97))
                 .environment(\.colorScheme, scheme)
             writePNG(render(view, scale: 2), to: dir.appendingPathComponent("schedules-\(scheme == .dark ? "dark" : "light").png"))
@@ -176,7 +186,7 @@ enum DemoRecorder {
                         Spacer()
                         if open {
                             Group {
-                                if screen == .schedules { SchedulesView(done: {}).padding(14).frame(width: 300) }
+                                if screen == .schedules { SchedulesView(done: {}).padding(12).frame(width: 320) }
                                 else { PanelView() }
                             }
                             .environmentObject(store)

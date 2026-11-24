@@ -12,7 +12,8 @@ through the SmartThings REST API (`https://api.smartthings.com/v1`). No third-pa
 | Path | Purpose |
 | --- | --- |
 | `Sources/Aeris/AerisApp.swift` | App entry point, menu bar label |
-| `Sources/Aeris/PanelView.swift` | The drop-down panel UI, settings view, chip flow layout |
+| `Sources/Aeris/PanelView.swift` | Main panel (header, hero, climate, airflow, switches) and shared building blocks (`Card`, `SegmentedControl`, `MiniSwitch`, …) |
+| `Sources/Aeris/SettingsView.swift` | Settings screen; `ScreenHeader`, `SettingsRow`, `ExpandRow`, button styles |
 | `Sources/Aeris/ACStore.swift` | `@MainActor` state: polling, commands, debounced setpoint, launch-at-login |
 | `Sources/Aeris/SmartThingsClient.swift` | Thin REST client; status kept as loose JSON |
 | `Sources/Aeris/Auth.swift` | Sign-in state, token renewal; own-app OAuth code flow and `aeris://` callback |
@@ -74,7 +75,9 @@ Test env vars: `AERIS_ST_CLI` and `AERIS_ST_CREDENTIALS` (fake CLI and credentia
   Times are in the location's time zone. Rules can't be disabled (status updates are rejected), so pausing
   deletes the rule and keeps the schedule in UserDefaults. The timer is a one-day rule (`Aeris: Timer …`)
   deleted after it fires; stray timer rules are cleaned up on load.
-- UI in the panel uses `.buttonStyle(.plain)` so `ImageRenderer` can draw it for demo media.
+- UI style: Control Center-like cards (`Card`, 14pt continuous corners), uppercase `SectionLabel`s, accent
+  gradients for "on" states, SF Symbols. Build controls in SwiftUI (no `Toggle`/`Picker`/`DisclosureGroup`/
+  `ProgressView` in rendered screens) so `ImageRenderer` can draw them for demo media.
 
 ## Workflow
 

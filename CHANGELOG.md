@@ -8,6 +8,16 @@ The section for each version is used as that version's GitHub release notes.
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-24
+
+### Changed
+- **Redesigned in the style of macOS Control Center.** A status line under your AC's name
+  ("Cooling to 24° · Room 27°"), a large power button and temperature, mode icons, sliding
+  segmented controls for fan speed and special modes, a collapsible Airflow card and proper switches.
+- Settings and Schedules use the same card design. Pick your air conditioner from a list, and pause
+  schedules with a switch.
+- Launch at login and Quit moved into Settings.
+
 ## [1.3.1] - 2026-11-24
 
 ### Changed
@@ -80,7 +90,8 @@ First release of the menu bar app (as **AC Control**).
 - Launch at login.
 - Universal build for Apple Silicon and Intel, macOS 13 Ventura or later.
 
-[Unreleased]: https://github.com/kashmithnisakya/aeris/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/kashmithnisakya/aeris/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/kashmithnisakya/aeris/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/kashmithnisakya/aeris/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/kashmithnisakya/aeris/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/kashmithnisakya/aeris/compare/v1.1.1...v1.2.0
