@@ -24,6 +24,9 @@ jobs:
         run: scripts/release-notes.sh "${{ github.event.inputs.version || github.ref_name }}" > "$RUNNER_TEMP/notes.md"
 
       - name: Build app
+        env:
+          AERIS_CLIENT_ID: ${{ secrets.AERIS_CLIENT_ID }}
+          AERIS_CLIENT_SECRET: ${{ secrets.AERIS_CLIENT_SECRET }}
         run: scripts/build-app.sh "${{ github.event.inputs.version || github.ref_name }}"
 
       - name: Publish GitHub release

@@ -8,6 +8,15 @@ The section for each version is used as that version's GitHub release notes.
 
 ## [Unreleased]
 
+### Added
+- **Sign in with SmartThings.** Sign in once in your browser and Aeris renews its access by itself,
+  instead of needing a new personal access token every 24 hours.
+- Settings can hold your own SmartThings app (Client ID and Secret) for builds without a built-in one.
+
+### Changed
+- Pasting a personal access token moved to Settings → Advanced. A token saved by an earlier version
+  keeps working until it expires.
+
 ## [1.1.1] - 2026-11-24
 
 No changes to the app itself. This release makes Aeris easier to install and update.

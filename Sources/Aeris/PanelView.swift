@@ -147,24 +147,27 @@ struct PanelView: View {
 
 struct SettingsView: View {
     @EnvironmentObject var store: ACStore
+    @ObservedObject private var auth = AuthManager.shared
     var done: () -> Void
     @State private var token = ""
+    @State private var clientID = ""
+    @State private var clientSecret = ""
+    @State private var showClient = false
+    @State private var showToken = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("SmartThings token").font(.subheadline.weight(.semibold))
-            SecureField(store.hasToken ? "Saved in Keychain — paste to replace" : "Paste personal access token",
-                        text: $token)
-                .textFieldStyle(.roundedBorder)
-                .onSubmit(save)
-            HStack {
-                Link("Get a token", destination: URL(string: "https://account.smartthings.com/tokens")!)
-                    .font(.caption)
-                Spacer()
-                Button("Save", action: save).disabled(token.isEmpty)
+            Text("SmartThings account").font(.subheadline.weight(.semibold))
+            account
+
+            if let err = auth.lastError {
+                Label(err, systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption).foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            Text("Tick the Devices permissions (list, see, control) when creating it.")
-                .font(.caption).foregroundStyle(.secondary)
+
+            if !auth.hasBuiltInClient { ownApp }
+            advancedToken
 
             if store.hasToken {
                 Divider()
@@ -181,8 +184,6 @@ struct SettingsView: View {
                     .labelsHidden()
                 }
                 HStack {
-                    Button("Remove token", role: .destructive) { store.signOut() }
-                        .buttonStyle(.borderless).font(.caption)
                     Spacer()
                     Button("Done", action: done).keyboardShortcut(.defaultAction)
                 }
@@ -191,7 +192,94 @@ struct SettingsView: View {
         .task { if store.hasToken && store.devices.isEmpty { await store.loadDevices() } }
     }
 
-    private func save() {
+    @ViewBuilder private var account: some View {
+        if auth.signingIn {
+            HStack {
+                ProgressView().controlSize(.small)
+                Text("Finish signing in in your browser…").font(.callout)
+                Spacer()
+                Button("Cancel") { auth.cancelSignIn() }.buttonStyle(.plain).font(.caption).foregroundStyle(.secondary)
+            }
+        } else if let c = auth.credentials, c.kind == .oauth {
+            HStack {
+                Label("Signed in — access renews automatically", systemImage: "checkmark.seal.fill")
+                    .font(.callout).foregroundStyle(.green)
+                Spacer()
+                Button("Sign out") { store.signOut() }.buttonStyle(.plain).font(.caption).foregroundStyle(.secondary)
+            }
+        } else {
+            if auth.credentials?.kind == .pat {
+                Text("Using a personal access token. SmartThings makes these expire after 24 hours.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Button { auth.beginSignIn() } label: {
+                Label("Sign in with SmartThings", systemImage: "person.crop.circle.badge.checkmark")
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(auth.client == nil ? Color.secondary.opacity(0.3) : Color.accentColor,
+                                in: RoundedRectangle(cornerRadius: 9))
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.plain)
+            .disabled(auth.client == nil)
+            if auth.client == nil {
+                Text("Add your SmartThings app below to enable sign-in.").font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var ownApp: some View {
+        DisclosureGroup(isExpanded: $showClient) {
+            VStack(alignment: .leading, spacing: 6) {
+                if let c = auth.customClient {
+                    HStack {
+                        Text("Client ID \(c.id.prefix(8))… saved").font(.caption).foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Remove") { auth.removeCustomClient() }.buttonStyle(.plain).font(.caption)
+                    }
+                }
+                TextField("Client ID", text: $clientID).textFieldStyle(.roundedBorder)
+                SecureField("Client Secret", text: $clientSecret).textFieldStyle(.roundedBorder)
+                HStack {
+                    Link("How to create one", destination: URL(string: "https://github.com/kashmithnisakya/aeris#use-your-own-smartthings-app")!)
+                        .font(.caption)
+                    Spacer()
+                    Button("Save") {
+                        auth.saveCustomClient(id: clientID, secret: clientSecret)
+                        clientID = ""; clientSecret = ""
+                    }
+                    .disabled(clientID.isEmpty || clientSecret.isEmpty)
+                }
+            }
+            .padding(.top, 4)
+        } label: {
+            Text("Your SmartThings app").font(.caption)
+        }
+        .onAppear { if auth.customClient == nil { showClient = true } }
+    }
+
+    private var advancedToken: some View {
+        DisclosureGroup(isExpanded: $showToken) {
+            VStack(alignment: .leading, spacing: 6) {
+                SecureField("Paste personal access token", text: $token)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit(saveToken)
+                HStack {
+                    Link("Get a token", destination: URL(string: "https://account.smartthings.com/tokens")!).font(.caption)
+                    Spacer()
+                    Button("Use token", action: saveToken).disabled(token.isEmpty)
+                }
+                Text("Expires after 24 hours. Tick the Devices permissions when creating it.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            .padding(.top, 4)
+        } label: {
+            Text("Advanced: personal access token").font(.caption)
+        }
+    }
+
+    private func saveToken() {
         store.saveToken(token)
         token = ""
         done()

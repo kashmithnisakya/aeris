@@ -1,46 +1,59 @@
 import Foundation
 import Security
 
-/// Stores the SmartThings token in the user's login Keychain.
+/// Small wrapper around the login Keychain. Each value is a generic password under one service.
 enum Keychain {
-    private static let service = "com.kashmithnisakya.aeris.smartthings"
-    private static let account = "token"
+    private static let service = ProcessInfo.processInfo.environment["AERIS_KEYCHAIN_SERVICE"]
+        ?? "com.kashmithnisakya.aeris.smartthings"
 
-    static func read() -> String? {
-        // For development/testing only: lets you point the app at a token without the Keychain.
-        if let env = ProcessInfo.processInfo.environment["AERIS_TOKEN"], !env.isEmpty { return env }
+    enum Account: String {
+        case legacyToken = "token"          // personal access token saved by Aeris 1.x
+        case credentials = "credentials"    // JSON-encoded Credentials
+        case oauthClient = "oauthClient"    // JSON-encoded OAuthClient the user entered
+    }
+
+    static func data(_ account: Account) -> Data? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
+            kSecAttrAccount as String: account.rawValue,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne,
         ]
         var item: CFTypeRef?
-        guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
-              let data = item as? Data else { return nil }
-        return String(data: data, encoding: .utf8)
+        guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess else { return nil }
+        return item as? Data
     }
 
     @discardableResult
-    static func save(_ token: String) -> Bool {
-        delete()
+    static func set(_ data: Data, for account: Account) -> Bool {
+        delete(account)
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecValueData as String: Data(token.utf8),
+            kSecAttrAccount as String: account.rawValue,
+            kSecValueData as String: data,
             kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
         ]
         return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
     }
 
-    static func delete() {
+    static func delete(_ account: Account) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
+            kSecAttrAccount as String: account.rawValue,
         ]
         SecItemDelete(query as CFDictionary)
+    }
+
+    static func get<T: Decodable>(_ type: T.Type, _ account: Account) -> T? {
+        data(account).flatMap { try? JSONDecoder().decode(T.self, from: $0) }
+    }
+
+    @discardableResult
+    static func put<T: Encodable>(_ value: T, _ account: Account) -> Bool {
+        guard let d = try? JSONEncoder().encode(value) else { return false }
+        return set(d, for: account)
     }
 }

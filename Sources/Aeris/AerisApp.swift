@@ -2,11 +2,13 @@ import SwiftUI
 
 @main
 struct AerisApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var store = ACStore()
 
     init() {
         #if DEBUG
         DemoRecorder.startIfRequested()
+        SignInTestHook.startIfRequested()
         #endif
     }
 

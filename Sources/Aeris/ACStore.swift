@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import ServiceManagement
 import SwiftUI
@@ -5,7 +6,7 @@ import SwiftUI
 /// App state: the selected AC, its latest status, and the actions that change it.
 @MainActor
 final class ACStore: ObservableObject {
-    @Published var hasToken = Keychain.read() != nil
+    @Published var hasToken = AuthManager.shared.isSignedIn
     @Published var deviceId: String? = UserDefaults.standard.string(forKey: "deviceId")
     @Published var deviceName = UserDefaults.standard.string(forKey: "deviceName") ?? "Air conditioner"
     @Published var status: [String: [String: Any]] = [:]
@@ -18,16 +19,29 @@ final class ACStore: ObservableObject {
 
     private var timer: Timer?
     private var setpointTask: Task<Void, Never>?
+    private var authWatch: AnyCancellable?
 
     init() {
-        timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+        // Follow sign-in state; load the AC as soon as a sign-in completes.
+        authWatch = AuthManager.shared.$credentials
+            .map { $0 != nil }
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] signedIn in
+                guard let self, !self.demoMode else { return }
+                self.hasToken = signedIn
+                if signedIn { self.error = nil; Task { await self.refresh() } }
+            }
+        let poll = Double(ProcessInfo.processInfo.environment["AERIS_POLL_SECONDS"] ?? "") ?? 30
+        timer = Timer.scheduledTimer(withTimeInterval: poll, repeats: true) { [weak self] _ in
             Task { @MainActor in await self?.refresh() }
         }
         Task { await refresh() }
     }
 
     private var client: SmartThingsClient? {
-        Keychain.read().map { SmartThingsClient(token: $0) }
+        guard AuthManager.shared.isSignedIn else { return nil }
+        return SmartThingsClient { force in try await AuthManager.shared.accessToken(forceRefresh: force) }
     }
 
     // MARK: - Reading status
@@ -121,16 +135,13 @@ final class ACStore: ObservableObject {
     // MARK: - Settings
 
     func saveToken(_ token: String) {
-        let t = token.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !t.isEmpty else { return }
-        Keychain.save(t)
-        hasToken = true
+        AuthManager.shared.usePersonalAccessToken(token)
         error = nil
         Task { await refresh() }
     }
 
     func signOut() {
-        Keychain.delete()
+        AuthManager.shared.signOut()
         hasToken = false
         status = [:]
         devices = []

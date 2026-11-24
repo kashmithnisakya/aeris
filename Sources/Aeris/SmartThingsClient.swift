@@ -2,6 +2,7 @@ import Foundation
 
 struct STError: LocalizedError {
     let message: String
+    var unauthorized = false
     var errorDescription: String? { message }
 }
 
@@ -14,11 +15,20 @@ struct STDevice: Identifiable, Hashable {
 /// Minimal SmartThings REST client. Status payloads are kept as loose JSON
 /// because every AC model reports a slightly different set of capabilities.
 struct SmartThingsClient {
-    var baseURL = URL(string: ProcessInfo.processInfo.environment["AERIS_API"]
-                      ?? "https://api.smartthings.com/v1")!
-    let token: String
+    var baseURL = AuthConfig.apiBase
+    /// Returns an access token; `true` asks for a freshly renewed one after a 401.
+    let token: (_ forceRefresh: Bool) async throws -> String
 
     private func request(_ method: String, _ path: String, body: Any? = nil) async throws -> Any {
+        do {
+            return try await send(method, path, body: body, token: try await token(false))
+        } catch let e as STError where e.unauthorized {
+            // Expired or revoked token: renew once and retry.
+            return try await send(method, path, body: body, token: try await token(true))
+        }
+    }
+
+    private func send(_ method: String, _ path: String, body: Any?, token: String) async throws -> Any {
         var req = URLRequest(url: baseURL.appendingPathComponent(path))
         req.httpMethod = method
         req.timeoutInterval = 15
@@ -38,8 +48,8 @@ struct SmartThingsClient {
         let code = (response as? HTTPURLResponse)?.statusCode ?? 0
         switch code {
         case 200..<300: break
-        case 401: throw STError(message: "Token rejected or expired. Paste a new one in Settings.")
-        case 403: throw STError(message: "Token is missing the Devices permissions.")
+        case 401: throw STError(message: "SmartThings rejected the sign-in. Sign in again in Settings.", unauthorized: true)
+        case 403: throw STError(message: "Aeris doesn't have permission for this device. Sign in again and allow device access.")
         case 404: throw STError(message: "Device not found. Pick it again in Settings.")
         default:
             let text = String(data: data, encoding: .utf8)?.prefix(200) ?? ""

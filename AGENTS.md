@@ -15,7 +15,8 @@ through the SmartThings REST API (`https://api.smartthings.com/v1`). No third-pa
 | `Sources/Aeris/PanelView.swift` | The drop-down panel UI, settings view, chip flow layout |
 | `Sources/Aeris/ACStore.swift` | `@MainActor` state: polling, commands, debounced setpoint, launch-at-login |
 | `Sources/Aeris/SmartThingsClient.swift` | Thin REST client; status kept as loose JSON |
-| `Sources/Aeris/Keychain.swift` | Token storage in the login Keychain |
+| `Sources/Aeris/Auth.swift` | Sign in with SmartThings (OAuth code flow), token renewal, `aeris://` callback |
+| `Sources/Aeris/Keychain.swift` | Credentials storage in the login Keychain |
 | `Sources/Aeris/DemoRecorder.swift` | DEBUG-only renderer for README screenshots/GIF |
 | `scripts/build-app.sh` | Builds universal `dist/Aeris.app` + zip, ad-hoc signed |
 | `scripts/make-icon.swift` | Draws the app icon |
@@ -36,6 +37,14 @@ scripts/make-demo.sh           # demo media in dist/demo/
 Test without touching a real AC by pointing the app at a mock server:
 `AERIS_API=http://127.0.0.1:8799 AERIS_TOKEN=test swift run`.
 `AERIS_TOKEN` bypasses the Keychain and is meant only for development.
+
+Sign-in: the app opens `https://api.smartthings.com/v1/oauth/authorize`; SmartThings redirects to
+`https://kashmithnisakya.github.io/aeris/callback/` (served from the `gh-pages` branch), which forwards
+`?code&state` to `aeris://oauth/callback`. Access tokens last 24 h; refresh tokens are single-use, so
+renewals are serialized in `AuthManager` and the new pair is saved immediately.
+Release builds embed the SmartThings OAuth client from the `AERIS_CLIENT_ID` / `AERIS_CLIENT_SECRET`
+repository secrets. For local testing use env vars `AERIS_CLIENT_ID`, `AERIS_CLIENT_SECRET`,
+`AERIS_KEYCHAIN_SERVICE` (isolated Keychain) and, in debug builds, `AERIS_TEST_SIGNIN=1`.
 
 ## Conventions
 
