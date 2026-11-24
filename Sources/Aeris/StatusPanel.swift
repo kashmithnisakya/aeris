@@ -28,8 +28,14 @@ final class StatusPanelController: NSObject {
         let root = PanelView()
             .environmentObject(store)
             .background(SizeReader { [weak self] size in self?.contentDidResize(size) })
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         hostingView = NSHostingView(rootView: AnyView(root))
-        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        // Frame-based layout: the hosting view always fills the panel, and the panel's height is
+        // set from the measured SwiftUI size. (Its own intrinsic size went stale when content grew,
+        // which clipped the top of the dashboard after returning from Schedules.)
+        hostingView.sizingOptions = []
+        hostingView.translatesAutoresizingMaskIntoConstraints = true
+        hostingView.autoresizingMask = [.width, .height]
 
         let effect = NSVisualEffectView()
         effect.material = .popover
@@ -39,13 +45,9 @@ final class StatusPanelController: NSObject {
         effect.layer?.cornerRadius = 14
         effect.layer?.cornerCurve = .continuous
         effect.layer?.masksToBounds = true
-        effect.addSubview(hostingView)
-        NSLayoutConstraint.activate([
-            hostingView.leadingAnchor.constraint(equalTo: effect.leadingAnchor),
-            hostingView.trailingAnchor.constraint(equalTo: effect.trailingAnchor),
-            hostingView.topAnchor.constraint(equalTo: effect.topAnchor),
-        ])
         panel.contentView = effect
+        hostingView.frame = effect.bounds
+        effect.addSubview(hostingView)
 
         // Status item: AC symbol, plus the target temperature while the AC is on.
         if let button = statusItem.button {
@@ -117,6 +119,7 @@ final class StatusPanelController: NSObject {
         x = min(max(x, visible.minX + 8), visible.maxX - width - 8)
         let top = buttonRect.minY - 6
         panel.setFrame(NSRect(x: x, y: top - height, width: width, height: height), display: true)
+        if let effect = panel.contentView { hostingView.frame = effect.bounds }
     }
 }
 
