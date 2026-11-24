@@ -95,6 +95,10 @@ final class StatusPanelController: NSObject {
         }
     }
 
+    func openFromReopen() {
+        if !panel.isVisible { openPanel() }
+    }
+
     func closePanel() {
         panel.orderOut(nil)
         statusItem.button?.highlight(false)
