@@ -8,6 +8,18 @@
 
 Aeris is a tiny macOS menu bar app for controlling a Samsung / SmartThings air conditioner.
 
+```bash
+brew install --cask kashmithnisakya/tap/aeris
+```
+
+or, without Homebrew:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kashmithnisakya/aeris/main/install.sh | bash
+```
+
+Then [set it up](#set-up) with your SmartThings token. More options in [Install](#install).
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/demo.gif" alt="Aeris demo: turning the AC on, changing temperature, mode and fan from the menu bar" width="720">
 </p>
