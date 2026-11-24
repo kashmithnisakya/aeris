@@ -104,26 +104,29 @@ enum DemoRecorder {
         }
         try? await Task.sleep(nanoseconds: 300_000_000)
 
-        // Static screenshots of the panel (AC on), light and dark.
+        // Static screenshots that look like the real panel: rounded, with a shadow, on transparency.
         store.status["switch"]?["switch"] = "on"
-        for scheme in [ColorScheme.light, .dark] {
-            let name = scheme == .dark ? "panel-dark.png" : "panel-light.png"
-            let view = PanelView().environmentObject(store)
-                .background(scheme == .dark ? Color(white: 0.16) : Color(white: 0.97))
-                .environment(\.colorScheme, scheme)
-            writePNG(render(view, scale: 2), to: dir.appendingPathComponent(name))
-        }
+        let auth0 = AuthManager.shared
+        auth0.setDemoState(credentials: Credentials(kind: .cli, accessToken: ""), signingIn: false)
+        store.devices = [STDevice(id: "demo", label: "Living room AC", isAC: true),
+                         STDevice(id: "demo2", label: "Bedroom AC", isAC: true)]
         store.schedules = [ACSchedule(ruleId: "r1", turnOn: true, minutes: 7 * 60, days: ["Mon", "Tue", "Wed", "Thu", "Fri"]),
                            ACSchedule(ruleId: "r2", turnOn: false, minutes: 23 * 60 + 30, days: []),
                            ACSchedule(ruleId: nil, turnOn: true, minutes: 18 * 60, days: ["Sat", "Sun"])]
         store.sleepTimer = SleepTimer(ruleId: "t", fireDate: Calendar.current.date(bySettingHour: 23, minute: 0, second: 0, of: Date())!)
         store.scheduleTimeZone = TimeZone(identifier: "Asia/Colombo")
         for scheme in [ColorScheme.light, .dark] {
-            let view = SchedulesView(done: {}).environmentObject(store).padding(12).frame(width: 320)
-                .background(scheme == .dark ? Color(white: 0.16) : Color(white: 0.97))
-                .environment(\.colorScheme, scheme)
-            writePNG(render(view, scale: 2), to: dir.appendingPathComponent("schedules-\(scheme == .dark ? "dark" : "light").png"))
+            let tag = scheme == .dark ? "dark" : "light"
+            writePNG(render(PanelShot(scheme: scheme) { PanelView() }.environmentObject(store), scale: 2),
+                     to: dir.appendingPathComponent("panel-\(tag).png"))
+            writePNG(render(PanelShot(scheme: scheme) { SchedulesView(done: {}).padding(12).frame(width: 320) }
+                                .environmentObject(store), scale: 2),
+                     to: dir.appendingPathComponent("schedules-\(tag).png"))
+            writePNG(render(PanelShot(scheme: scheme) { SettingsView(done: {}).padding(12).frame(width: 320) }
+                                .environmentObject(store), scale: 2),
+                     to: dir.appendingPathComponent("settings-\(tag).png"))
         }
+        store.devices = []
         store.status["switch"]?["switch"] = "off"
 
         let set: (String, String, Any) -> (ACStore) -> Void = { cap, attr, v in { $0.status[cap]?[attr] = v } }
@@ -192,8 +195,8 @@ enum DemoRecorder {
                             }
                             .environmentObject(store)
                                 .background(Color(white: 0.14).opacity(0.97))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.12)))
+                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.white.opacity(0.12)))
                                 .compositingGroup()
                                 .shadow(color: .black.opacity(0.4), radius: 18, y: 8)
                                 .padding(.trailing, 150)
@@ -234,6 +237,24 @@ enum DemoRecorder {
             .padding(.horizontal, 14)
             .frame(height: 28)
             .background(Color.black.opacity(0.35))
+        }
+    }
+
+    /// A screen drawn like the real drop-down panel: popover-like fill, 14pt continuous corners,
+    /// hairline border and soft shadow, on a transparent background.
+    struct PanelShot<Content: View>: View {
+        let scheme: ColorScheme
+        @ViewBuilder var content: Content
+        var body: some View {
+            content
+                .background(scheme == .dark ? Color(red: 0.16, green: 0.165, blue: 0.18) : Color(red: 0.965, green: 0.965, blue: 0.97))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(scheme == .dark ? Color.white.opacity(0.14) : Color.black.opacity(0.08)))
+                .compositingGroup()
+                .shadow(color: .black.opacity(scheme == .dark ? 0.45 : 0.18), radius: 22, y: 10)
+                .padding(36)
+                .environment(\.colorScheme, scheme)
         }
     }
 
