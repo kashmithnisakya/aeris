@@ -17,6 +17,15 @@ final class ACStore: ObservableObject {
     @Published var pendingSetpoint: Double?
     @Published var launchAtLogin = SMAppService.mainApp.status == .enabled
 
+    // Schedules (see Schedules.swift)
+    @Published var schedules: [ACSchedule] = []
+    @Published var sleepTimer: SleepTimer?
+    @Published var schedulesLoading = false
+    @Published var scheduleError: String?
+    var scheduleLocationId: String?
+    var scheduleTimeZone: TimeZone?
+    var schedulesLoadedOnce = false
+
     private var timer: Timer?
     private var setpointTask: Task<Void, Never>?
     private var authWatch: AnyCancellable?
@@ -39,7 +48,7 @@ final class ACStore: ObservableObject {
         Task { await refresh() }
     }
 
-    private var client: SmartThingsClient? {
+    var client: SmartThingsClient? {
         guard AuthManager.shared.isSignedIn else { return nil }
         return SmartThingsClient { force in try await AuthManager.shared.accessToken(forceRefresh: force) }
     }
@@ -90,6 +99,8 @@ final class ACStore: ObservableObject {
             status = newStatus
             online = health.map { $0 == "ONLINE" }
             error = nil
+            if !schedulesLoadedOnce { schedulesLoadedOnce = true; await loadSchedules() }
+            else if let t = sleepTimer, t.fireDate < Date().addingTimeInterval(-90) { await loadSchedules() }
         } catch {
             self.error = error.localizedDescription
         }
@@ -248,6 +259,7 @@ final class ACStore: ObservableObject {
     }
 
     func selectDevice(_ d: STDevice) {
+        if d.id != deviceId { scheduleLocationId = nil; scheduleTimeZone = nil; schedules = []; sleepTimer = nil }
         deviceId = d.id
         deviceName = d.label
         UserDefaults.standard.set(d.id, forKey: "deviceId")

@@ -36,6 +36,10 @@ Click the AC icon in the menu bar to turn it on or off, change the temperature, 
 swing and special modes (Sleep, Quiet, WindFree…). While the AC is on, the menu bar shows the
 target temperature next to the icon.
 
+On Samsung models that support it you can also aim the airflow (up/down and left/right swing or a
+fixed angle), switch the display light, beep and auto-clean, and set **schedules** and a
+**turn-off timer** that run in SmartThings even when your Mac is asleep.
+
 - Native SwiftUI, no dependencies, ~1 MB
 - Universal (Apple Silicon + Intel), macOS 13 Ventura or later
 - Token stored in your macOS Keychain; the app only talks to `api.smartthings.com`
