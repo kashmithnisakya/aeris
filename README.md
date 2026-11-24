@@ -111,7 +111,8 @@ Regenerate them with `scripts/make-demo.sh` (output in `dist/demo/`) and commit 
 
 ## Release
 
-Push a tag and GitHub Actions builds the app and attaches the zip to a GitHub release:
+Add the version's notes to [`CHANGELOG.md`](CHANGELOG.md), merge, then push a tag. GitHub Actions
+builds the app and publishes a GitHub release with that changelog section as its notes:
 
 ```bash
 git tag v1.0.1 && git push origin v1.0.1

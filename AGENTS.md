@@ -19,6 +19,7 @@ through the SmartThings REST API (`https://api.smartthings.com/v1`). No third-pa
 | `Sources/Aeris/DemoRecorder.swift` | DEBUG-only renderer for README screenshots/GIF |
 | `scripts/build-app.sh` | Builds universal `dist/Aeris.app` + zip, ad-hoc signed |
 | `scripts/make-icon.swift` | Draws the app icon |
+| `scripts/release-notes.sh` | Prints a version's GitHub release notes from `CHANGELOG.md` |
 | `scripts/make-demo.sh` | Regenerates screenshots, GIF and MP4 into `dist/demo/` |
 | `install.sh` | One-line installer/uninstaller; downloads `releases/latest/download/Aeris.zip` |
 | `.github/workflows/release.yml` | On `v*` tag: build and attach zip to a GitHub release |
@@ -50,7 +51,11 @@ Test without touching a real AC by pointing the app at a mock server:
 - `main` is protected: open a pull request, don't push directly.
 - Screenshots and videos live on the orphan `assets` branch, not on `main`. Reference them with
   `https://raw.githubusercontent.com/kashmithnisakya/aeris/assets/<file>`.
-- Release by pushing a tag: `git tag v1.2.3 && git push origin v1.2.3`.
+- Keep `CHANGELOG.md` current: add user-facing changes under `## [Unreleased]` in the same PR.
+- Release: in a PR, rename `## [Unreleased]` to `## [1.2.3] - YYYY-MM-DD`, add a fresh empty
+  `## [Unreleased]` above it and update the compare links at the bottom. After it merges, push the tag:
+  `git tag v1.2.3 && git push origin v1.2.3`. The release workflow uses that section as the release
+  notes and fails if it is missing.
   Every release must include `Aeris-<version>.zip` and a fixed-name `Aeris.zip` (build-app.sh makes
   both). `install.sh` downloads `Aeris.zip`; the Homebrew cask in `kashmithnisakya/homebrew-tap`
   (`Casks/aeris.rb`) pins `Aeris-<version>.zip` with a sha256, and that tap's hourly `bump-aeris`
