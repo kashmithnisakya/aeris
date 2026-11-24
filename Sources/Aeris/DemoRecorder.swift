@@ -58,7 +58,7 @@ enum DemoRecorder {
 
         let set: (String, String, Any) -> (ACStore) -> Void = { cap, attr, v in { $0.status[cap]?[attr] = v } }
         let frames: [Frame] = [
-            Frame(open: false, caption: "AC Control lives in your menu bar", seconds: 1.6) { _ in },
+            Frame(open: false, caption: "Aeris lives in your menu bar", seconds: 1.6) { _ in },
             Frame(open: true, caption: "Click the icon to open the panel", seconds: 1.4) { _ in },
             Frame(open: true, caption: "One click to turn it on", seconds: 1.6, change: set("switch", "switch", "on")),
             Frame(open: true, caption: "Set the temperature", seconds: 0.6, change: set("thermostatCoolingSetpoint", "coolingSetpoint", NSNumber(value: 25))),

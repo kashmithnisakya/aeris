@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "ACControl",
+    name: "Aeris",
     platforms: [.macOS(.v13)],
     targets: [
         .executableTarget(
-            name: "ACControl",
-            path: "Sources/ACControl"
+            name: "Aeris",
+            path: "Sources/Aeris"
         )
     ]
 )

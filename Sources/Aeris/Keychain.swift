@@ -3,12 +3,12 @@ import Security
 
 /// Stores the SmartThings token in the user's login Keychain.
 enum Keychain {
-    private static let service = "com.accontrol.smartthings"
+    private static let service = "com.kashmithnisakya.aeris.smartthings"
     private static let account = "token"
 
     static func read() -> String? {
         // For development/testing only: lets you point the app at a token without the Keychain.
-        if let env = ProcessInfo.processInfo.environment["AC_CONTROL_TOKEN"], !env.isEmpty { return env }
+        if let env = ProcessInfo.processInfo.environment["AERIS_TOKEN"], !env.isEmpty { return env }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,

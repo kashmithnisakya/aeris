@@ -29,5 +29,5 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" dist/*.zip --clobber
           else
-            gh release create "$TAG" dist/*.zip --title "AC Control $TAG" --generate-notes
+            gh release create "$TAG" dist/*.zip --title "Aeris $TAG" --generate-notes
           fi
