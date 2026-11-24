@@ -46,7 +46,10 @@ struct PanelView: View {
             }
         }
         .padding(12)
-        .frame(width: 320)
+        // Pin to the top and report the content's own height, so the menu bar window
+        // resizes to each screen instead of centering a shorter one in leftover space.
+        .frame(width: 320, alignment: .top)
+        .fixedSize(horizontal: false, vertical: true)
         .task { await store.refresh() }
         .animation(.snappy(duration: 0.25), value: store.isOn)
     }
