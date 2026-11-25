@@ -268,7 +268,15 @@ final class ACStore: ObservableObject {
         Task { await refresh() }
     }
 
+    /// Launch at login only makes sense for the installed .app. A bare development binary (`swift run`,
+    /// `.build/…/Aeris`) registered as a login item gets opened in Terminal at every login.
+    static var canLaunchAtLogin: Bool { Bundle.main.bundleURL.pathExtension == "app" }
+
     func setLaunchAtLogin(_ on: Bool) {
+        guard Self.canLaunchAtLogin else {
+            error = "Launch at login is only available in the installed Aeris app."
+            return
+        }
         do {
             if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
         } catch {
