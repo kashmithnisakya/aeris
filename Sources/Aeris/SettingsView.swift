@@ -62,6 +62,9 @@ struct SettingsView: View {
                 SettingsRow(icon: "power", title: "Launch at login") {
                     MiniSwitch(isOn: store.launchAtLogin) { store.setLaunchAtLogin(!store.launchAtLogin) }
                         .accessibilityLabel("Launch at login")
+                        .disabled(!ACStore.canLaunchAtLogin)
+                        .opacity(ACStore.canLaunchAtLogin ? 1 : 0.4)
+                        .help(ACStore.canLaunchAtLogin ? "" : "Only available in the installed app")
                 }
                 Divider().padding(.leading, 34)
                 SettingsRow(icon: "info.circle", title: "Version") {

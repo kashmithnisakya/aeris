@@ -61,6 +61,10 @@ Test env vars: `AERIS_ST_CLI` and `AERIS_ST_CREDENTIALS` (fake CLI and credentia
 
 ## Conventions
 
+- Never register a development binary as a login item: `setLaunchAtLogin` refuses unless running from
+  an `.app` bundle (`ACStore.canLaunchAtLogin`). A bare `.build/…/Aeris` login item opens in Terminal
+  at every login. Always quit test instances you start.
+
 - Don't use SwiftUI `App`/`MenuBarExtra`: `MenuBarExtra(.window)` never shrinks, and any `Scene`
   (even `Settings { EmptyView() }`) shows a stray window when the app activates. The panel is an
   `NSPanel` whose height comes from the measured SwiftUI size (`SizeReader`); the hosting view uses
